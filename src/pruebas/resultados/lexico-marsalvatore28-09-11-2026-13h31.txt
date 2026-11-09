@@ -1,0 +1,75 @@
+Token: LOCAL        Valor: local           Linea: 1
+Token: ID           Valor: MAX_INTENTOS    Linea: 1
+Token: LT           Valor: <               Linea: 1
+Token: ID           Valor: const           Linea: 1
+Token: GT           Valor: >               Linea: 1
+Token: ASSIGN       Valor: =               Linea: 1
+Token: INTEGER      Valor: 3               Linea: 1
+Token: LOCAL        Valor: local           Linea: 2
+Token: ID           Valor: ruta            Linea: 2
+Token: ASSIGN       Valor: =               Linea: 2
+Token: LOCAL        Valor: local           Linea: 3
+Token: ID           Valor: codigo          Linea: 3
+Token: ASSIGN       Valor: =               Linea: 3
+Token: LOCAL        Valor: local           Linea: 4
+Token: ID           Valor: mensaje         Linea: 4
+Token: ASSIGN       Valor: =               Linea: 4
+Token: LOCAL        Valor: local           Linea: 5
+Token: ID           Valor: valido          Linea: 5
+Token: ASSIGN       Valor: =               Linea: 5
+Token: TRUE         Valor: true            Linea: 5
+Token: LOCAL        Valor: local           Linea: 6
+Token: ID           Valor: vacio           Linea: 6
+Token: ASSIGN       Valor: =               Linea: 6
+Token: NIL          Valor: nil             Linea: 6
+Token: LOCAL        Valor: local           Linea: 8
+Token: ID           Valor: intentos        Linea: 8
+Token: ASSIGN       Valor: =               Linea: 8
+Token: INTEGER      Valor: 0               Linea: 8
+Token: REPEAT       Valor: repeat          Linea: 9
+Token: ID           Valor: io              Linea: 10
+Token: DOT          Valor: .               Linea: 10
+Token: ID           Valor: write           Linea: 10
+Token: LPAREN       Valor: (               Linea: 10
+Token: STRING       Valor: 'Clave: '       Linea: 10
+Token: RPAREN       Valor: )               Linea: 10
+Token: LOCAL        Valor: local           Linea: 11
+Token: ID           Valor: clave           Linea: 11
+Token: ASSIGN       Valor: =               Linea: 11
+Token: ID           Valor: io              Linea: 11
+Token: DOT          Valor: .               Linea: 11
+Token: ID           Valor: read            Linea: 11
+Token: LPAREN       Valor: (               Linea: 11
+Token: STRING       Valor: "l"             Linea: 11
+Token: RPAREN       Valor: )               Linea: 11
+Token: ID           Valor: intentos        Linea: 12
+Token: ASSIGN       Valor: =               Linea: 12
+Token: ID           Valor: intentos        Linea: 12
+Token: PLUS         Valor: +               Linea: 12
+Token: INTEGER      Valor: 1               Linea: 12
+Token: UNTIL        Valor: until           Linea: 13
+Token: ID           Valor: clave           Linea: 13
+Token: EQ           Valor: ==              Linea: 13
+Token: STRING       Valor: "lua"           Linea: 13
+Token: OR           Valor: or              Linea: 13
+Token: ID           Valor: intentos        Linea: 13
+Token: GE           Valor: >=              Linea: 13
+Token: ID           Valor: MAX_INTENTOS    Linea: 13
+Token: INTEGER      Valor: 1               Linea: 13
+Token: ID           Valor: print           Linea: 15
+Token: LPAREN       Valor: (               Linea: 15
+Token: STRING       Valor: "Bienvenido"    Linea: 15
+Token: COMMA        Valor: ,               Linea: 15
+Token: ID           Valor: valido          Linea: 15
+Token: COMMA        Valor: ,               Linea: 15
+Token: ID           Valor: vacio           Linea: 15
+Token: RPAREN       Valor: )               Linea: 15
+Token: LOCAL        Valor: local           Linea: 16
+Token: ID           Valor: ayuda           Linea: 16
+Token: ASSIGN       Valor: =               Linea: 16
+Error léxico: secuencia de escape inválida '\u' en la línea 2, posición 17
+Error léxico: secuencia de escape inválida '\300' en la línea 3, posición 17
+Error léxico: cadena sin cerrar "Ingrese su nombre en la línea 4, posición 17
+Error léxico: carácter '$' no reconocido en la línea 13, posición 50
+Error léxico: carácter '@' no reconocido en la línea 15, posición 36
+Error léxico: cadena larga sin cerrar (falta ']==]') en la línea 16, posición 15

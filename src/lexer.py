@@ -156,7 +156,7 @@ def validar_escapes(t, linea_inicial):
             secuencia = valor[i:i + 2] if escape is None else escape.group()
             registrar_error(
                 t.lexer,
-                f"Secuencia de escape invalida: '{secuencia}'",
+                f"secuencia de escape inválida '{secuencia}'",
                 linea_inicial + valor.count('\n', 0, i),
                 t.lexpos + i
             )
@@ -171,7 +171,7 @@ def t_STRING_SIN_CERRAR(t):
     r'"([^"\\\n]|\\(.|\n))*|\'([^\'\\\n]|\\(.|\n))*'
     registrar_error(
         t.lexer,
-        f"Cadena sin cerrar: {t.value.splitlines()[0]}",
+        f"cadena sin cerrar {t.value.splitlines()[0]}",
         t.lineno,
         t.lexpos
     )
@@ -192,7 +192,7 @@ def t_STRING_LARGA(t):
     if fin == -1:
         registrar_error(
             t.lexer,
-            f"Cadena larga sin cerrar: falta '{cierre}'",
+            f"cadena larga sin cerrar (falta '{cierre}')",
             t.lineno,
             t.lexpos
         )
@@ -226,7 +226,7 @@ def t_COMMENT_LARGO(t):
     if fin == -1:
         registrar_error(
             t.lexer,
-            f"Comentario largo sin cerrar: falta '{cierre}'",
+            f"comentario largo sin cerrar (falta '{cierre}')",
             t.lineno,
             t.lexpos
         )
@@ -400,7 +400,8 @@ def t_newline(t):
 # =====================================================
 
 # INICIO APORTE MARLO VALLE: MANEJO DE TOKENS DE ERROR
-# Todos los errores se registran con linea y columna para
+# Todos los errores se registran con linea y posicion (columna)
+# con el formato definido en el documento del proyecto, para
 # ubicar con precision el token invalido en el codigo fuente.
 
 def encontrar_columna(lexer, posicion):
@@ -410,13 +411,15 @@ def encontrar_columna(lexer, posicion):
 
 def registrar_error(lexer, mensaje, linea, posicion):
     columna = encontrar_columna(lexer, posicion)
-    lexer.errors.append(f"{mensaje}, linea {linea}, columna {columna}")
+    lexer.errors.append(
+        f"Error léxico: {mensaje} en la línea {linea}, posición {columna}"
+    )
 
 
 def t_error(t):
     registrar_error(
         t.lexer,
-        f"Caracter no reconocido: {t.value[0]!r}",
+        f"carácter {t.value[0]!r} no reconocido",
         t.lineno,
         t.lexpos
     )
