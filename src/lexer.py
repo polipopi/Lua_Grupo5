@@ -12,23 +12,38 @@ reserved = {
     'else': 'ELSE',
     'elseif': 'ELSEIF',
     'end': 'END',
-    'false': 'FALSE',
     'for': 'FOR',
     'function': 'FUNCTION',
     'goto': 'GOTO',
     'if': 'IF',
     'in': 'IN',
     'local': 'LOCAL',
-    'nil': 'NIL',
     'not': 'NOT',
     'or': 'OR',
     'repeat': 'REPEAT',
     'return': 'RETURN',
     'then': 'THEN',
-    'true': 'TRUE',
     'until': 'UNTIL',
     'while': 'WHILE'
 }
+
+
+# =====================================================
+# INICIO APORTE MARLO VALLE: LITERALES BOOLEANOS Y NIL
+# true, false y nil son palabras reservadas que ademas
+# representan valores; se agrupan aqui y se agregan a
+# las palabras reservadas para que t_ID las reconozca.
+# =====================================================
+
+literales = {
+    'true': 'TRUE',
+    'false': 'FALSE',
+    'nil': 'NIL'
+}
+
+reserved.update(literales)
+
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
