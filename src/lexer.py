@@ -209,6 +209,43 @@ def t_STRING_LARGA(t):
 
 
 # =====================================================
+# COMENTARIOS
+# INICIO APORTE MARLO VALLE: ORDEN DE COMENTARIOS
+# PLY prueba las funciones en el orden en que se definen;
+# si los comentarios van despues de t_MINUS, '--' se lee
+# como dos restas. Por eso se definen antes de operadores.
+# =====================================================
+
+# Comentarios largos: --[[ ... ]], --[==[ ... ]==], etc.
+def t_COMMENT_LARGO(t):
+    r'--\[=*\['
+    datos = t.lexer.lexdata
+    cierre = ']' + '=' * (len(t.value) - 4) + ']'
+    fin = datos.find(cierre, t.lexer.lexpos)
+
+    if fin == -1:
+        registrar_error(
+            t.lexer,
+            f"Comentario largo sin cerrar: falta '{cierre}'",
+            t.lineno,
+            t.lexpos
+        )
+        t.lexer.lineno += datos.count('\n', t.lexpos)
+        t.lexer.lexpos = len(datos)
+        return None
+
+    fin += len(cierre)
+    t.lexer.lineno += datos.count('\n', t.lexpos, fin)
+    t.lexer.lexpos = fin
+
+
+def t_COMMENT(t):
+    r'--[^\n]*'
+    pass
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
 # INICIO APORTE PAULA BASTIDAS
 # OPERADORES ARITMETICOS, RELACIONALES
 # Y DE CONCATENACION
@@ -344,15 +381,6 @@ t_DBCOLON = r'::'
 # FIN APORTE ANTHONY SANTANA
 t_COLON = r':'
 t_DOT = r'\.'
-
-
-# =====================================================
-# COMENTARIOS
-# =====================================================
-
-def t_COMMENT(t):
-    r'--[^\n]*'
-    pass
 
 
 # =====================================================
