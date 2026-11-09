@@ -122,9 +122,15 @@ def t_ELLIPSIS(t):
 # CADENAS
 # =====================================================
 
+# INICIO APORTE MARLO VALLE: CADENAS CORTAS
+# El contenido no puede incluir la comilla de apertura sin
+# escapar; asi "a" .. "b" produce dos cadenas y no una sola.
+# Una barra invertida seguida de salto de linea es valida.
 def t_STRING(t):
-    r'"([^\\\n]|\\.)*"|\'([^\\\n]|\\.)*\''
+    r'"([^"\\\n]|\\(.|\n))*"|\'([^\'\\\n]|\\(.|\n))*\''
+    t.lexer.lineno += t.value.count('\n')
     return t
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
