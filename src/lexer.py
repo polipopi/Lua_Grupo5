@@ -5,7 +5,9 @@ import ply.lex as lex
 # =====================================================
 # PALABRAS RESERVADAS
 # =====================================================
-
+# INICIO APORTE SHIRLEY ARAGÓN: PALABRAS RESERVADAS
+# Las 19 palabras reservadas de Lua 5.4 que no son
+# valores; true, false y nil estan en el bloque de Marlo.
 reserved = {
     'and': 'AND',
     'break': 'BREAK',
@@ -27,7 +29,7 @@ reserved = {
     'until': 'UNTIL',
     'while': 'WHILE'
 }
-
+# FIN APORTE SHIRLEY ARAGÓN
 
 # =====================================================
 # INICIO APORTE MARLO VALLE: LITERALES BOOLEANOS Y NIL
@@ -82,11 +84,17 @@ tokens = [
 # IDENTIFICADORES Y PALABRAS RESERVADAS
 # =====================================================
 
+# INICIO APORTE SHIRLEY ARAGÓN: IDENTIFICADORES
+# Un nombre empieza con letra o guion bajo; si coincide
+# con una palabra reservada se devuelve su token propio,
+# si no, se devuelve ID.
+
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
     t.type = reserved.get(t.value, 'ID')
     return t
 
+# FIN APORTE SHIRLEY ARAGÓN
 
 # =====================================================
 # NUMEROS
@@ -210,7 +218,7 @@ def t_STRING_LARGA(t):
 
 # =====================================================
 # COMENTARIOS
-# INICIO APORTE MARLO VALLE: ORDEN DE COMENTARIOS
+# INICIO APORTE MARLO VALLE-SHIRLEY ARAGÓN: ORDEN DE COMENTARIOS
 # PLY prueba las funciones en el orden en que se definen;
 # si los comentarios van despues de t_MINUS, '--' se lee
 # como dos restas. Por eso se definen antes de operadores.
@@ -242,7 +250,7 @@ def t_COMMENT_LARGO(t):
 def t_COMMENT(t):
     r'--[^\n]*'
     pass
-# FIN APORTE MARLO VALLE
+# FIN APORTE MARLO VALLE -SHIRLEY ARAGÓN
 
 
 # =====================================================
