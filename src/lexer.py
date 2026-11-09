@@ -1,4 +1,5 @@
 
+import re
 import ply.lex as lex
 
 # =====================================================
@@ -12,23 +13,38 @@ reserved = {
     'else': 'ELSE',
     'elseif': 'ELSEIF',
     'end': 'END',
-    'false': 'FALSE',
     'for': 'FOR',
     'function': 'FUNCTION',
     'goto': 'GOTO',
     'if': 'IF',
     'in': 'IN',
     'local': 'LOCAL',
-    'nil': 'NIL',
     'not': 'NOT',
     'or': 'OR',
     'repeat': 'REPEAT',
     'return': 'RETURN',
     'then': 'THEN',
-    'true': 'TRUE',
     'until': 'UNTIL',
     'while': 'WHILE'
 }
+
+
+# =====================================================
+# INICIO APORTE MARLO VALLE: LITERALES BOOLEANOS Y NIL
+# true, false y nil son palabras reservadas que ademas
+# representan valores; se agrupan aqui y se agregan a
+# las palabras reservadas para que t_ID las reconozca.
+# =====================================================
+
+literales = {
+    'true': 'TRUE',
+    'false': 'FALSE',
+    'nil': 'NIL'
+}
+
+reserved.update(literales)
+
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
@@ -107,9 +123,126 @@ def t_ELLIPSIS(t):
 # CADENAS
 # =====================================================
 
+# INICIO APORTE MARLO VALLE: CADENAS CORTAS
+# El contenido no puede incluir la comilla de apertura sin
+# escapar; asi "a" .. "b" produce dos cadenas y no una sola.
+# Una barra invertida seguida de salto de linea es valida.
 def t_STRING(t):
-    r'"([^\\\n]|\\.)*"|\'([^\\\n]|\\.)*\''
+    r'"([^"\\\n]|\\(.|\n))*"|\'([^\'\\\n]|\\(.|\n))*\''
+    linea_inicial = t.lexer.lineno
+    t.lexer.lineno += t.value.count('\n')
+    if not validar_escapes(t, linea_inicial):
+        return None
     return t
+
+
+# Secuencias de escape permitidas en Lua:
+# \a \b \f \n \r \t \v \\ \" \' \<salto> \z \xXX \ddd \u{XXX}
+ESCAPE_VALIDO = re.compile(
+    r'\\([abfnrtv\\"\'\n]|z|x[0-9a-fA-F]{2}|\d{1,3}|u\{[0-9a-fA-F]+\})'
+)
+
+
+def validar_escapes(t, linea_inicial):
+    valor = t.value
+    i = 0
+    while i < len(valor):
+        if valor[i] != '\\':
+            i += 1
+            continue
+        escape = ESCAPE_VALIDO.match(valor, i)
+        if escape is None or (escape.group(1).isdigit()
+                              and int(escape.group(1)) > 255):
+            secuencia = valor[i:i + 2] if escape is None else escape.group()
+            registrar_error(
+                t.lexer,
+                f"secuencia de escape inválida '{secuencia}'",
+                linea_inicial + valor.count('\n', 0, i),
+                t.lexpos + i
+            )
+            return False
+        i = escape.end()
+    return True
+
+
+# Una comilla que llega al fin de linea sin cerrarse es un error.
+# Se define despues de t_STRING para que solo actue si esta falla.
+def t_STRING_SIN_CERRAR(t):
+    r'"([^"\\\n]|\\(.|\n))*|\'([^\'\\\n]|\\(.|\n))*'
+    registrar_error(
+        t.lexer,
+        f"cadena sin cerrar {t.value.splitlines()[0]}",
+        t.lineno,
+        t.lexpos
+    )
+    t.lexer.lineno += t.value.count('\n')
+
+
+# Cadenas largas: [[ ... ]], [=[ ... ]=], [==[ ... ]==], etc.
+# Pueden ocupar varias lineas y no procesan escapes. Se busca
+# manualmente el cierre con el mismo numero de signos '='.
+# Al ser funcion, se evalua antes que el delimitador LBRACKET.
+def t_STRING_LARGA(t):
+    r'\[=*\['
+    datos = t.lexer.lexdata
+    niveles = len(t.value) - 2
+    cierre = ']' + '=' * niveles + ']'
+    fin = datos.find(cierre, t.lexer.lexpos)
+
+    if fin == -1:
+        registrar_error(
+            t.lexer,
+            f"cadena larga sin cerrar (falta '{cierre}')",
+            t.lineno,
+            t.lexpos
+        )
+        t.lexer.lineno += datos.count('\n', t.lexpos)
+        t.lexer.lexpos = len(datos)
+        return None
+
+    t.lexer.lexpos = fin + len(cierre)
+    t.value = datos[t.lexpos:t.lexer.lexpos]
+    t.lexer.lineno += t.value.count('\n')
+    t.type = 'STRING'
+    return t
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# COMENTARIOS
+# INICIO APORTE MARLO VALLE: ORDEN DE COMENTARIOS
+# PLY prueba las funciones en el orden en que se definen;
+# si los comentarios van despues de t_MINUS, '--' se lee
+# como dos restas. Por eso se definen antes de operadores.
+# =====================================================
+
+# Comentarios largos: --[[ ... ]], --[==[ ... ]==], etc.
+def t_COMMENT_LARGO(t):
+    r'--\[=*\['
+    datos = t.lexer.lexdata
+    cierre = ']' + '=' * (len(t.value) - 4) + ']'
+    fin = datos.find(cierre, t.lexer.lexpos)
+
+    if fin == -1:
+        registrar_error(
+            t.lexer,
+            f"comentario largo sin cerrar (falta '{cierre}')",
+            t.lineno,
+            t.lexpos
+        )
+        t.lexer.lineno += datos.count('\n', t.lexpos)
+        t.lexer.lexpos = len(datos)
+        return None
+
+    fin += len(cierre)
+    t.lexer.lineno += datos.count('\n', t.lexpos, fin)
+    t.lexer.lexpos = fin
+
+
+def t_COMMENT(t):
+    r'--[^\n]*'
+    pass
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
@@ -251,15 +384,6 @@ t_DOT = r'\.'
 
 
 # =====================================================
-# COMENTARIOS
-# =====================================================
-
-def t_COMMENT(t):
-    r'--[^\n]*'
-    pass
-
-
-# =====================================================
 # ESPACIOS Y SALTOS DE LINEA
 # =====================================================
 
@@ -275,13 +399,32 @@ def t_newline(t):
 # ERRORES LEXICOS
 # =====================================================
 
-def t_error(t):
-    mensaje = (
-        f"Caracter no reconocido: {t.value[0]!r}, "
-        f"linea {t.lineno}"
+# INICIO APORTE MARLO VALLE: MANEJO DE TOKENS DE ERROR
+# Todos los errores se registran con linea y posicion (columna)
+# con el formato definido en el documento del proyecto, para
+# ubicar con precision el token invalido en el codigo fuente.
+
+def encontrar_columna(lexer, posicion):
+    inicio_linea = lexer.lexdata.rfind('\n', 0, posicion) + 1
+    return posicion - inicio_linea + 1
+
+
+def registrar_error(lexer, mensaje, linea, posicion):
+    columna = encontrar_columna(lexer, posicion)
+    lexer.errors.append(
+        f"Error léxico: {mensaje} en la línea {linea}, posición {columna}"
     )
-    t.lexer.errors.append(mensaje)
+
+
+def t_error(t):
+    registrar_error(
+        t.lexer,
+        f"carácter {t.value[0]!r} no reconocido",
+        t.lineno,
+        t.lexpos
+    )
     t.lexer.skip(1)
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
