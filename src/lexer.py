@@ -55,7 +55,10 @@ tokens = [
     'LPAREN', 'RPAREN',
     'LBRACE', 'RBRACE',
     'LBRACKET', 'RBRACKET',
-    'COMMA', 'SEMI', 'COLON', 'DOT'
+    'COMMA', 'SEMI', 'COLON', 'DOT',
+    # INICIO APORTE ANTHONY SANTANA: NUEVOS DELIMITADORES
+    'DBCOLON', 'ELLIPSIS',
+    # FIN APORTE ANTHONY SANTANA
 ] + list(reserved.values())
 
 
@@ -73,10 +76,13 @@ def t_ID(t):
 # NUMEROS
 # =====================================================
 
+# INICIO APORTE ANTHONY SANTANA: AJUSTE A LA REGLA FLOAT EXISTENTE
 def t_FLOAT(t):
-    r'((\d+\.\d*|\.\d+)([eE][+-]?\d+)?|\d+[eE][+-]?\d+)'
+    # Deja .. y ... completos para sus propias reglas.
+    r'((\d+\.(?!\.)\d*|\.\d+)([eE][+-]?\d+)?|\d+[eE][+-]?\d+)'
     t.value = float(t.value)
     return t
+# FIN APORTE ANTHONY SANTANA
 
 
 def t_INTEGER(t):
@@ -86,6 +92,15 @@ def t_INTEGER(t):
     else:
         t.value = int(t.value)
     return t
+
+
+# =====================================================
+# INICIO APORTE ANTHONY SANTANA: DELIMITADOR DE VARARGS
+# Va antes de CONCAT para reconocer los tres puntos juntos.
+def t_ELLIPSIS(t):
+    r'\.\.\.'
+    return t
+# FIN APORTE ANTHONY SANTANA
 
 
 # =====================================================
@@ -228,6 +243,9 @@ t_LBRACKET = r'\['
 t_RBRACKET = r'\]'
 t_COMMA = r','
 t_SEMI = r';'
+# INICIO APORTE ANTHONY SANTANA: DELIMITADOR DE ETIQUETAS
+t_DBCOLON = r'::'
+# FIN APORTE ANTHONY SANTANA
 t_COLON = r':'
 t_DOT = r'\.'
 

@@ -1,12 +1,15 @@
+from argparse import ArgumentParser
 from pathlib import Path
 from datetime import datetime
 from lexer import lexer
 
 BASE_DIR = Path(__file__).resolve().parent
+ARCHIVO_PREDETERMINADO = "prueba_paula.lua"
+USUARIO_PREDETERMINADO = "politopoli"
 
-def ejecutar_analisis():
 
-    archivo = BASE_DIR / "pruebas" / "algoritmos" / "prueba_paula.lua"
+def ejecutar_analisis(archivo=ARCHIVO_PREDETERMINADO, usuario=USUARIO_PREDETERMINADO):
+    archivo = BASE_DIR / "pruebas" / "algoritmos" / archivo
 
     codigo = archivo.read_text(encoding="utf-8")
 
@@ -46,18 +49,29 @@ def ejecutar_analisis():
     carpeta_logs = BASE_DIR / "pruebas" / "resultados"
     carpeta_logs.mkdir(exist_ok=True)
 
-    fecha = datetime.now().strftime("%d-%m-%Y-%Hh%M%S")
-    nombre = f"lexico-politopoli-{fecha}.txt"
+    ahora = datetime.now()
+    fecha = ahora.strftime("%d-%m-%Y-%Hh%M")
+    if usuario == USUARIO_PREDETERMINADO:
+        fecha += ahora.strftime("%S")
 
-    ruta = carpeta_logs / nombre
-
-    ruta.write_text(
-        "\n".join(resultados),
-        encoding="utf-8"
-    )
+    ruta = carpeta_logs / f"lexico-{usuario}-{fecha}.txt"
+    try:
+        log = ruta.open("x", encoding="utf-8")
+    except FileExistsError:
+        # Evita sobrescribir un log si se repite la prueba.
+        ruta = carpeta_logs / f"lexico-{usuario}-{ahora:%d-%m-%Y-%Hh%M%S%f}.txt"
+        log = ruta.open("x", encoding="utf-8")
+    with log:
+        log.write("\n".join(resultados))
 
     print(f"\nLog generado: {ruta}")
 
 
 if __name__ == "__main__":
-    ejecutar_analisis()
+    parser = ArgumentParser(description="Analizador lexico de Lua")
+    parser.add_argument("--archivo", default=ARCHIVO_PREDETERMINADO,
+                        help="Nombre del archivo Lua en pruebas/algoritmos")
+    parser.add_argument("--usuario", default=USUARIO_PREDETERMINADO,
+                        help="Usuario de GitHub para el nombre del log")
+    args = parser.parse_args()
+    ejecutar_analisis(args.archivo, args.usuario)
