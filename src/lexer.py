@@ -1,4 +1,5 @@
 
+import re
 import ply.lex as lex
 
 # =====================================================
@@ -128,8 +129,53 @@ def t_ELLIPSIS(t):
 # Una barra invertida seguida de salto de linea es valida.
 def t_STRING(t):
     r'"([^"\\\n]|\\(.|\n))*"|\'([^\'\\\n]|\\(.|\n))*\''
+    linea_inicial = t.lexer.lineno
     t.lexer.lineno += t.value.count('\n')
+    if not validar_escapes(t, linea_inicial):
+        return None
     return t
+
+
+# Secuencias de escape permitidas en Lua:
+# \a \b \f \n \r \t \v \\ \" \' \<salto> \z \xXX \ddd \u{XXX}
+ESCAPE_VALIDO = re.compile(
+    r'\\([abfnrtv\\"\'\n]|z|x[0-9a-fA-F]{2}|\d{1,3}|u\{[0-9a-fA-F]+\})'
+)
+
+
+def validar_escapes(t, linea_inicial):
+    valor = t.value
+    i = 0
+    while i < len(valor):
+        if valor[i] != '\\':
+            i += 1
+            continue
+        escape = ESCAPE_VALIDO.match(valor, i)
+        if escape is None or (escape.group(1).isdigit()
+                              and int(escape.group(1)) > 255):
+            secuencia = valor[i:i + 2] if escape is None else escape.group()
+            registrar_error(
+                t.lexer,
+                f"Secuencia de escape invalida: '{secuencia}'",
+                linea_inicial + valor.count('\n', 0, i),
+                t.lexpos + i
+            )
+            return False
+        i = escape.end()
+    return True
+
+
+# Una comilla que llega al fin de linea sin cerrarse es un error.
+# Se define despues de t_STRING para que solo actue si esta falla.
+def t_STRING_SIN_CERRAR(t):
+    r'"([^"\\\n]|\\(.|\n))*|\'([^\'\\\n]|\\(.|\n))*'
+    registrar_error(
+        t.lexer,
+        f"Cadena sin cerrar: {t.value.splitlines()[0]}",
+        t.lineno,
+        t.lexpos
+    )
+    t.lexer.lineno += t.value.count('\n')
 # FIN APORTE MARLO VALLE
 
 
@@ -296,13 +342,29 @@ def t_newline(t):
 # ERRORES LEXICOS
 # =====================================================
 
+# INICIO APORTE MARLO VALLE: MANEJO DE TOKENS DE ERROR
+# Todos los errores se registran con linea y columna para
+# ubicar con precision el token invalido en el codigo fuente.
+
+def encontrar_columna(lexer, posicion):
+    inicio_linea = lexer.lexdata.rfind('\n', 0, posicion) + 1
+    return posicion - inicio_linea + 1
+
+
+def registrar_error(lexer, mensaje, linea, posicion):
+    columna = encontrar_columna(lexer, posicion)
+    lexer.errors.append(f"{mensaje}, linea {linea}, columna {columna}")
+
+
 def t_error(t):
-    mensaje = (
-        f"Caracter no reconocido: {t.value[0]!r}, "
-        f"linea {t.lineno}"
+    registrar_error(
+        t.lexer,
+        f"Caracter no reconocido: {t.value[0]!r}",
+        t.lineno,
+        t.lexpos
     )
-    t.lexer.errors.append(mensaje)
     t.lexer.skip(1)
+# FIN APORTE MARLO VALLE
 
 
 # =====================================================
