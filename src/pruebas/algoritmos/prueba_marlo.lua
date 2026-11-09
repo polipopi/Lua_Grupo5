@@ -40,6 +40,11 @@ repeat
     end
 until nombre == "fin" or nombre == nil or contador >= MAX_ESTUDIANTES
 
+-- Lectura de un numero
+io.write("Ingrese el numero de aula: ")
+local aula = io.read("n")
+print("Aula:", aula)
+
 -- Pertenencia al conjunto
 local buscado = io.read("l")
 if presentes[buscado] then
