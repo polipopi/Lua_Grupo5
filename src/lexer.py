@@ -176,6 +176,35 @@ def t_STRING_SIN_CERRAR(t):
         t.lexpos
     )
     t.lexer.lineno += t.value.count('\n')
+
+
+# Cadenas largas: [[ ... ]], [=[ ... ]=], [==[ ... ]==], etc.
+# Pueden ocupar varias lineas y no procesan escapes. Se busca
+# manualmente el cierre con el mismo numero de signos '='.
+# Al ser funcion, se evalua antes que el delimitador LBRACKET.
+def t_STRING_LARGA(t):
+    r'\[=*\['
+    datos = t.lexer.lexdata
+    niveles = len(t.value) - 2
+    cierre = ']' + '=' * niveles + ']'
+    fin = datos.find(cierre, t.lexer.lexpos)
+
+    if fin == -1:
+        registrar_error(
+            t.lexer,
+            f"Cadena larga sin cerrar: falta '{cierre}'",
+            t.lineno,
+            t.lexpos
+        )
+        t.lexer.lineno += datos.count('\n', t.lexpos)
+        t.lexer.lexpos = len(datos)
+        return None
+
+    t.lexer.lexpos = fin + len(cierre)
+    t.value = datos[t.lexpos:t.lexer.lexpos]
+    t.lexer.lineno += t.value.count('\n')
+    t.type = 'STRING'
+    return t
 # FIN APORTE MARLO VALLE
 
 
