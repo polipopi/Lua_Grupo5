@@ -1,0 +1,4 @@
+Archivo: prueba_anthony_semantico_for_error.lua
+Regla: paso literal del for distinto de cero.
+Error semantico [Estructuras de Control] en la linea 3: el paso del 'for' no puede ser cero.
+Error semantico [Estructuras de Control] en la linea 6: el paso del 'for' no puede ser cero.

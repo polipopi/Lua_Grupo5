@@ -1,0 +1,3 @@
+Archivo: prueba_anthony_semantico_for.lua
+Regla: paso literal del for distinto de cero.
+No se encontraron errores semanticos.

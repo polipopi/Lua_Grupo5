@@ -12,6 +12,7 @@ precedence = (
 )
 
 errores = []
+pasos_for = []
 
 
 def p_programa(p):
@@ -31,11 +32,14 @@ def p_sentencia(p):
 # El paso del for es opcional. Su cuerpo usa las mismas sentencias.
 def p_sentencia_for(p):
     'sentencia : FOR ID ASSIGN expresion COMMA expresion paso DO programa END'
+    # Guardo la linea y el paso literal para la regla semantica del for.
+    pasos_for.append((p.lineno(1), p[7]))
 
 
 def p_paso(p):
     '''paso : COMMA expresion
             | '''
+    p[0] = p[2] if len(p) == 3 else 1
 
 
 # Funciones con n argumentos. Los parametros con nombre van antes de ...
@@ -96,6 +100,8 @@ def p_expresion_binaria(p):
 
 def p_expresion_negativa(p):
     'expresion : MINUS expresion %prec UMINUS'
+    if isinstance(p[2], (int, float)):
+        p[0] = -p[2]
 
 
 def p_expresion_longitud(p):
@@ -104,6 +110,7 @@ def p_expresion_longitud(p):
 
 def p_expresion_parentesis(p):
     'expresion : LPAREN expresion RPAREN'
+    p[0] = p[2]
 
 
 def p_expresion_valor(p):
@@ -115,6 +122,8 @@ def p_expresion_valor(p):
                  | NIL
                  | ELLIPSIS
                  | variable'''
+    if p.slice[1].type in ('INTEGER', 'FLOAT'):
+        p[0] = p[1]
 
 
 # Una matriz es una tabla con otras tablas como filas.
@@ -153,6 +162,7 @@ parser = yacc.yacc(start='programa', write_tables=False, debug=False)
 
 def analizar(codigo):
     errores.clear()
+    pasos_for.clear()
     lexer.lineno = 1
     lexer.errors = []
     parser.parse(codigo, lexer=lexer)
