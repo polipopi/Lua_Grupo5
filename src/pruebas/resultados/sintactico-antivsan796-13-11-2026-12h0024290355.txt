@@ -1,0 +1,2 @@
+Archivo: prueba_anthony_for_error.lua
+Error sintactico: token 'total' inesperado, linea 4

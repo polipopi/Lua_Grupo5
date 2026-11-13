@@ -3,11 +3,11 @@ from lexer import lexer, tokens
 
 
 # INICIO APORTE ANTHONY SANTANA
-# Asignacion global, expresiones aritmeticas y matrices.
+# Asignacion global, expresiones aritmeticas, matrices y for numerico.
 precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'FLOORDIV', 'MOD'),
-    ('right', 'UMINUS'),
+    ('right', 'UMINUS', 'HASH'),
     ('right', 'POW'),
 )
 
@@ -24,6 +24,16 @@ def p_sentencia(p):
                  | SEMI'''
 
 
+# El paso del for es opcional. Su cuerpo usa las mismas sentencias.
+def p_sentencia_for(p):
+    'sentencia : FOR ID ASSIGN expresion COMMA expresion paso DO programa END'
+
+
+def p_paso(p):
+    '''paso : COMMA expresion
+            | '''
+
+
 def p_expresion_binaria(p):
     '''expresion : expresion PLUS expresion
                  | expresion MINUS expresion
@@ -36,6 +46,10 @@ def p_expresion_binaria(p):
 
 def p_expresion_negativa(p):
     'expresion : MINUS expresion %prec UMINUS'
+
+
+def p_expresion_longitud(p):
+    'expresion : HASH expresion'
 
 
 def p_expresion_parentesis(p):

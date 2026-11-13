@@ -1,0 +1,2 @@
+Archivo: prueba_anthony_for.lua
+No se encontraron errores sintacticos.

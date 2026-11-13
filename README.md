@@ -15,6 +15,10 @@ Las matrices se escriben como tablas de tablas, por ejemplo `{{1, 2}, {3, 4}}`.
 Se puede leer o cambiar un elemento con `matriz[fila][columna]`. Las filas usan
 coma o punto y coma como separador y pueden dejar un separador al final.
 
+El `for` numerico acepta `for i = inicio, limite do ... end` y la variante
+con paso, `for i = inicio, limite, paso do ... end`. Se pueden anidar bucles.
+El operador `#` permite usar la cantidad de filas o columnas como limite.
+
 ## Ejecutar las pruebas
 
 Desde la carpeta del repositorio, instalar PLY y ejecutar una prueba.
@@ -23,6 +27,8 @@ Desde la carpeta del repositorio, instalar PLY y ejecutar una prueba.
 python -m pip install -r requirements.txt
 python src/main_sintactico.py --archivo prueba_anthony_matrices.lua
 python src/main_sintactico.py --archivo prueba_anthony_matrices_error.lua
+python src/main_sintactico.py --archivo prueba_anthony_for.lua
+python src/main_sintactico.py --archivo prueba_anthony_for_error.lua
 ```
 
 El usuario predeterminado del sintactico es `antivsan796`. Cada ejecucion guarda
