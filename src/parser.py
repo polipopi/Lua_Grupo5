@@ -3,7 +3,7 @@ from lexer import lexer, tokens
 
 
 # INICIO APORTE ANTHONY SANTANA
-# Asignacion global y expresiones aritmeticas.
+# Asignacion global, expresiones aritmeticas y matrices.
 precedence = (
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'FLOORDIV', 'MOD'),
@@ -20,7 +20,7 @@ def p_programa(p):
 
 
 def p_sentencia(p):
-    '''sentencia : ID ASSIGN expresion
+    '''sentencia : variable ASSIGN expresion
                  | SEMI'''
 
 
@@ -45,7 +45,29 @@ def p_expresion_parentesis(p):
 def p_expresion_valor(p):
     '''expresion : INTEGER
                  | FLOAT
-                 | ID'''
+                 | variable'''
+
+
+# Una matriz es una tabla con otras tablas como filas.
+def p_variable(p):
+    '''variable : ID
+                | variable LBRACKET expresion RBRACKET'''
+
+
+def p_expresion_tabla(p):
+    '''expresion : LBRACE RBRACE
+                 | LBRACE elementos RBRACE
+                 | LBRACE elementos separador RBRACE'''
+
+
+def p_elementos(p):
+    '''elementos : expresion
+                 | elementos separador expresion'''
+
+
+def p_separador(p):
+    '''separador : COMMA
+                 | SEMI'''
 
 
 def p_error(token):
