@@ -37,7 +37,7 @@ def ejecutar_analisis(archivo, usuario='antivsan796'):
 
 if __name__ == '__main__':
     argumentos = ArgumentParser(description='Pruebas del analizador sintactico')
-    argumentos.add_argument('--archivo', default='prueba_anthony_sintactico.lua')
+    argumentos.add_argument('--archivo', default='prueba_anthony_completo.lua')
     argumentos.add_argument('--usuario', default='antivsan796')
     opciones = argumentos.parse_args()
     ejecutar_analisis(opciones.archivo, opciones.usuario)
