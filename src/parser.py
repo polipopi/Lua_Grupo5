@@ -423,6 +423,45 @@ def p_llamada_cadena(p):
 
 # FIN APORTE MARLO VALLE
 
+
+# =====================================================
+# CLASES, PROPIEDADES Y METODOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# En Lua una clase es una tabla con metatabla:
+#   local Persona = {}
+#   Persona.__index = Persona
+#   function Persona.nuevo(nombre)            (constructor)
+#       local obj = setmetatable({}, Persona)
+#       obj.nombre = nombre                   (propiedad)
+#       return obj
+#   end
+#   function Persona:saludar()                (metodo, usa self)
+#       print("Hola, soy " .. self.nombre)
+#   end
+#   local p = Persona.nuevo("Ana")
+#   p:saludar()                               (llamada a metodo)
+# Las propiedades se manejan con el acceso con punto.
+
+def p_sentencia_metodo(p):
+    '''sentencia : FUNCTION ruta_funcion COLON ID LPAREN parametros RPAREN programa END
+                 | FUNCTION ruta_funcion DOT ID LPAREN parametros RPAREN programa END'''
+
+
+# Nombre de la tabla que contiene la funcion: Clase o modulo.Clase
+def p_ruta_funcion(p):
+    '''ruta_funcion : ID
+                    | ruta_funcion DOT ID'''
+
+
+# Llamada a un metodo con dos puntos: objeto:metodo(argumentos)
+def p_llamada_metodo(p):
+    '''llamada : variable COLON ID LPAREN argumentos RPAREN
+               | variable COLON ID STRING'''
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
