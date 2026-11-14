@@ -1,0 +1,6 @@
+Archivo: prueba_marlo_sintactico_error.lua
+Error sintactico: atributo 'constante' desconocido, se esperaba 'const' o 'close', linea 6
+Error sintactico: token 'local' inesperado, linea 13
+Error sintactico: token '(' inesperado, linea 16
+Error sintactico: token 'end' inesperado, linea 18
+Error sintactico: fin de archivo inesperado, linea 22
