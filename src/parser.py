@@ -356,6 +356,36 @@ def p_atributo(p):
 
 # FIN APORTE MARLO VALLE
 
+
+# =====================================================
+# ESTRUCTURA REPEAT ... UNTIL
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# El cuerpo se ejecuta al menos una vez y se repite
+# hasta que la condicion sea verdadera:
+# repeat n = n + 1 until n >= 3
+def p_sentencia_repeat(p):
+    'sentencia : REPEAT programa UNTIL expresion'
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# FUNCION LOCAL CON PARAMETRO OPCIONAL
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# local function saludar(nombre, saludo)
+#     saludo = saludo or "Hola"
+# end
+# En Lua todo parametro es opcional: si no se envia vale nil,
+# y el valor por defecto se asigna con el operador or.
+def p_sentencia_funcion_local(p):
+    'sentencia : LOCAL FUNCTION ID LPAREN parametros RPAREN programa END'
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
