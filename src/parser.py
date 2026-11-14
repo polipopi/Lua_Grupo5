@@ -331,6 +331,137 @@ def p_variable_campo(p):
 
 # FIN APORTE SHIRLEY ARAGON
 
+
+# =====================================================
+# CONSTANTES (Lua 5.4)
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# local PI <const> = 3.1416
+# local archivo <close> = recurso
+# La constante puede declararse con o sin valor inicial.
+def p_sentencia_constante(p):
+    '''sentencia : LOCAL ID atributo ASSIGN lista_expresiones
+                 | LOCAL ID atributo'''
+
+
+# Lua 5.4 solo acepta los atributos const y close.
+def p_atributo(p):
+    'atributo : LT ID GT'
+    if p[2] not in ('const', 'close'):
+        errores.append(
+            f"Error sintactico: atributo {p[2]!r} desconocido, "
+            f"se esperaba 'const' o 'close', linea {p.lineno(2)}"
+        )
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# ESTRUCTURA REPEAT ... UNTIL
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# El cuerpo se ejecuta al menos una vez y se repite
+# hasta que la condicion sea verdadera:
+# repeat n = n + 1 until n >= 3
+def p_sentencia_repeat(p):
+    'sentencia : REPEAT programa UNTIL expresion'
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# FUNCION LOCAL CON PARAMETRO OPCIONAL
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# local function saludar(nombre, saludo)
+#     saludo = saludo or "Hola"
+# end
+# En Lua todo parametro es opcional: si no se envia vale nil,
+# y el valor por defecto se asigna con el operador or.
+def p_sentencia_funcion_local(p):
+    'sentencia : LOCAL FUNCTION ID LPAREN parametros RPAREN programa END'
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# CONJUNTOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# Un conjunto es una tabla cuyas claves son los elementos:
+#   local colores = {rojo = true, ["azul"] = true}   (crear)
+#   colores["verde"] = true                          (agregar)
+#   colores.rojo = nil                               (eliminar)
+#   if colores["azul"] then ... end                  (pertenencia)
+# Crear, agregar, eliminar y consultar ya se reconocen con
+# las reglas de tablas y variables. Para recorrer sus
+# elementos se agrega el for generico:
+#   for elemento in pairs(colores) do ... end
+def p_sentencia_for_generico(p):
+    'sentencia : FOR nombres IN lista_expresiones DO programa END'
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# IMPRESION Y LECTURA DE DATOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# Las formas con parentesis se reconocen como llamadas:
+#   print("Total:", total)        io.write("Nombre: ")
+#   local nombre = io.read("l")   local edad = io.read("n")
+# Lua tambien permite llamar sin parentesis cuando el unico
+# argumento es una cadena:
+#   print "Hola Mundo"            local linea = io.read "l"
+def p_llamada_cadena(p):
+    'llamada : variable STRING'
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
+# CLASES, PROPIEDADES Y METODOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# En Lua una clase es una tabla con metatabla:
+#   local Persona = {}
+#   Persona.__index = Persona
+#   function Persona.nuevo(nombre)            (constructor)
+#       local obj = setmetatable({}, Persona)
+#       obj.nombre = nombre                   (propiedad)
+#       return obj
+#   end
+#   function Persona:saludar()                (metodo, usa self)
+#       print("Hola, soy " .. self.nombre)
+#   end
+#   local p = Persona.nuevo("Ana")
+#   p:saludar()                               (llamada a metodo)
+# Las propiedades se manejan con el acceso con punto.
+
+def p_sentencia_metodo(p):
+    '''sentencia : FUNCTION ruta_funcion COLON ID LPAREN parametros RPAREN programa END
+                 | FUNCTION ruta_funcion DOT ID LPAREN parametros RPAREN programa END'''
+
+
+# Nombre de la tabla que contiene la funcion: Clase o modulo.Clase
+def p_ruta_funcion(p):
+    '''ruta_funcion : ID
+                    | ruta_funcion DOT ID'''
+
+
+# Llamada a un metodo con dos puntos: objeto:metodo(argumentos)
+def p_llamada_metodo(p):
+    '''llamada : variable COLON ID LPAREN argumentos RPAREN
+               | variable COLON ID STRING'''
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
