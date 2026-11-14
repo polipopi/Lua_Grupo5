@@ -286,7 +286,50 @@ def p_separador(p):
 
 
 # FIN APORTE PAULA BASTIDAS
+# =====================================================
+# IF / ELSEIF / ELSE
+# INICIO APORTE SHIRLEY ARAGON
+# =====================================================
 
+def p_sentencia_if(p):
+    'sentencia : IF expresion THEN programa lista_elseif parte_else END'
+
+
+# puede haber varios elseif seguidos o ninguno
+def p_lista_elseif(p):
+    '''lista_elseif : lista_elseif ELSEIF expresion THEN programa
+                    | '''
+
+
+def p_parte_else(p):
+    '''parte_else : ELSE programa
+                  | '''
+
+# FIN APORTE SHIRLEY ARAGON
+
+
+# =====================================================
+# FUNCION CON RETORNO
+# INICIO APORTE SHIRLEY ARAGON
+# =====================================================
+
+# el return lo toma programa con retorno_opcional
+def p_sentencia_funcion_retorno(p):
+    '''sentencia : FUNCTION ID LPAREN nombres RPAREN programa END
+                 | FUNCTION ID LPAREN RPAREN programa END'''
+
+# FIN APORTE SHIRLEY ARAGON
+
+
+# =====================================================
+# ACCESO CON PUNTO (persona.nombre, io.read)
+# INICIO APORTE SHIRLEY ARAGON
+# =====================================================
+
+def p_variable_campo(p):
+    'variable : variable DOT ID'
+
+# FIN APORTE SHIRLEY ARAGON
 
 # =====================================================
 # ERRORES SINTACTICOS
