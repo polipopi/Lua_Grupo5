@@ -1,0 +1,2 @@
+Archivo: prueba_paula.lua
+No se encontraron errores sintacticos.

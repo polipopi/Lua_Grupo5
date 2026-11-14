@@ -1,0 +1,18 @@
+Archivo: prueba_paula.lua
+Error sintactico: token 'local' inesperado, linea 6
+Error sintactico: token 'local' inesperado, linea 7
+Error sintactico: token 'local' inesperado, linea 8
+Error sintactico: token 'local' inesperado, linea 11
+Error sintactico: token 'local' inesperado, linea 12
+Error sintactico: token 'local' inesperado, linea 13
+Error sintactico: token 'local' inesperado, linea 14
+Error sintactico: token 'local' inesperado, linea 15
+Error sintactico: token 'local' inesperado, linea 16
+Error sintactico: token 'local' inesperado, linea 17
+Error sintactico: token 'local' inesperado, linea 20
+Error sintactico: token 'local' inesperado, linea 21
+Error sintactico: token 'local' inesperado, linea 22
+Error sintactico: token 'local' inesperado, linea 23
+Error sintactico: token 'local' inesperado, linea 24
+Error sintactico: token 'local' inesperado, linea 25
+Error sintactico: token 'local' inesperado, linea 28
