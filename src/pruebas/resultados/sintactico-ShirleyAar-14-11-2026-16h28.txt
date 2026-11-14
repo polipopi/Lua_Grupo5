@@ -1,0 +1,4 @@
+Archivo: prueba_shirley_sintactico_error.lua
+Error sintactico: token 'print' inesperado, linea 6
+Error sintactico: token 'local' inesperado, linea 13
+Error sintactico: token 'function' inesperado, linea 16
