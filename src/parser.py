@@ -386,6 +386,26 @@ def p_sentencia_funcion_local(p):
 
 # FIN APORTE MARLO VALLE
 
+
+# =====================================================
+# CONJUNTOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# Un conjunto es una tabla cuyas claves son los elementos:
+#   local colores = {rojo = true, ["azul"] = true}   (crear)
+#   colores["verde"] = true                          (agregar)
+#   colores.rojo = nil                               (eliminar)
+#   if colores["azul"] then ... end                  (pertenencia)
+# Crear, agregar, eliminar y consultar ya se reconocen con
+# las reglas de tablas y variables. Para recorrer sus
+# elementos se agrega el for generico:
+#   for elemento in pairs(colores) do ... end
+def p_sentencia_for_generico(p):
+    'sentencia : FOR nombres IN lista_expresiones DO programa END'
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
