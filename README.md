@@ -65,3 +65,36 @@ carpeta de resultados. La prueba con error tiene dos ciclos con paso cero.
 
 Todavía me falta revisar los tipos del inicio, límite y paso, los pasos que
 usan variables u operaciones y mi regla de concatenación.
+
+## Aporte de Marlo Valle (`marsalvatore28`)
+
+### Avance 1, léxico
+
+En `src/lexer.py` hice las cadenas, los booleanos, `nil` y el manejo de
+tokens de error. Las cadenas pueden usar comillas simples, dobles o corchetes
+largos como `[[texto]]`. Cada error léxico se muestra con su línea y posición,
+por ejemplo un carácter no reconocido, una cadena sin cerrar o una secuencia
+de escape inválida.
+
+```sh
+python src/main.py --usuario marsalvatore28 --archivo prueba_marlo.lua
+python src/main.py --usuario marsalvatore28 --archivo prueba_marlo_error.lua
+```
+
+### Avance 2, sintáctico
+
+En `src/parser.py` agregué las reglas de constantes (`local PI <const> = 3.14`),
+`repeat ... until`, funciones locales con parámetro opcional, conjuntos con su
+recorrido `for elemento in pairs(conjunto)`, impresión y lectura de datos
+(incluida la forma `print "texto"`) y clases con propiedades y métodos
+(`function Clase:metodo()` y `objeto:metodo()`).
+
+Mi prueba registra a un estudiante en varios cursos usando una clase, un
+conjunto, una constante y un ciclo `repeat`. La prueba con errores tiene un
+atributo desconocido, un `until` sin condición, un método sin nombre y un
+paréntesis sin cerrar.
+
+```sh
+python src/main_sintactico.py --usuario marsalvatore28 --archivo prueba_marlo_sintactico.lua
+python src/main_sintactico.py --usuario marsalvatore28 --archivo prueba_marlo_sintactico_error.lua
+```
