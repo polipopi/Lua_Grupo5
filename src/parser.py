@@ -406,6 +406,23 @@ def p_sentencia_for_generico(p):
 
 # FIN APORTE MARLO VALLE
 
+
+# =====================================================
+# IMPRESION Y LECTURA DE DATOS
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# Las formas con parentesis se reconocen como llamadas:
+#   print("Total:", total)        io.write("Nombre: ")
+#   local nombre = io.read("l")   local edad = io.read("n")
+# Lua tambien permite llamar sin parentesis cuando el unico
+# argumento es una cadena:
+#   print "Hola Mundo"            local linea = io.read "l"
+def p_llamada_cadena(p):
+    'llamada : variable STRING'
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
