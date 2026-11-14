@@ -331,6 +331,31 @@ def p_variable_campo(p):
 
 # FIN APORTE SHIRLEY ARAGON
 
+
+# =====================================================
+# CONSTANTES (Lua 5.4)
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# local PI <const> = 3.1416
+# local archivo <close> = recurso
+# La constante puede declararse con o sin valor inicial.
+def p_sentencia_constante(p):
+    '''sentencia : LOCAL ID atributo ASSIGN lista_expresiones
+                 | LOCAL ID atributo'''
+
+
+# Lua 5.4 solo acepta los atributos const y close.
+def p_atributo(p):
+    'atributo : LT ID GT'
+    if p[2] not in ('const', 'close'):
+        errores.append(
+            f"Error sintactico: atributo {p[2]!r} desconocido, "
+            f"se esperaba 'const' o 'close', linea {p.lineno(2)}"
+        )
+
+# FIN APORTE MARLO VALLE
+
 # =====================================================
 # ERRORES SINTACTICOS
 # =====================================================
