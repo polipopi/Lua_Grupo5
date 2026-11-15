@@ -1,7 +1,11 @@
 import math
 import operator
-from parser import analizar as analizar_sintaxis, pasos_for, concatenaciones
-
+from parser import (
+    analizar as analizar_sintaxis,
+    pasos_for,
+    concatenaciones,
+    errores_semanticos
+)
 
 # INICIO APORTE ANTHONY SANTANA
 # Reglas 5 y 8: concatenacion y controles del for numerico.
@@ -54,6 +58,8 @@ def analizar(codigo):
     errores = analizar_sintaxis(codigo)
     if errores:
         return errores
+    errores.extend(errores_semanticos)
+        
 
     for linea, inicio, limite, paso in sorted(pasos_for, key=lambda bucle: bucle[0]):
         inicio = calcular_constante(inicio)

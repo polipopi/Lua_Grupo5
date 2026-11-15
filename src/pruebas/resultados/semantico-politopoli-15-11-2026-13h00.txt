@@ -1,0 +1,6 @@
+Archivo: prueba_semantica_paula.lua
+Reglas: controles del for y tipos de concatenacion.
+Error semántico [Identificadores] en la línea 5: 'total' no es una función
+Error semántico [Operaciones] en la línea 16: no se puede aplicar '+' entre number y boolean
+Error semántico [Operaciones] en la línea 19: no se puede aplicar '+' entre number y table
+Error semántico [Operaciones] en la línea 27: no se puede aplicar '+' entre string y number
