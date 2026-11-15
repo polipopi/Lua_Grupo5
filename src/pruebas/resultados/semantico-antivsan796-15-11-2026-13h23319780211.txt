@@ -1,0 +1,3 @@
+Archivo: prueba_anthony_completo.lua
+Reglas: controles del for y tipos de concatenacion.
+No se encontraron errores semanticos.

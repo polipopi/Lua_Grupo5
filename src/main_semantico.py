@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from datetime import datetime
+from itertools import count
 from pathlib import Path
 from semantico import analizar
 
@@ -12,7 +13,7 @@ def ejecutar_analisis(archivo, usuario='antivsan796'):
     ruta = BASE_DIR / 'pruebas' / 'algoritmos' / archivo
     errores = analizar(ruta.read_text(encoding='utf-8'))
 
-    resultados = [f'Archivo: {ruta.name}', 'Reglas: controles del for y tipos de concatenacion.']
+    resultados = [f'Archivo: {ruta.name}', 'Analisis semantico del programa.']
     if errores:
         resultados.extend(errores)
     else:
@@ -21,12 +22,16 @@ def ejecutar_analisis(archivo, usuario='antivsan796'):
     carpeta = BASE_DIR / 'pruebas' / 'resultados'
     carpeta.mkdir(exist_ok=True)
     ahora = datetime.now()
-    log = carpeta / f'semantico-{usuario}-{ahora:%d-%m-%Y-%Hh%M}.txt'
-    try:
-        salida = log.open('x', encoding='utf-8')
-    except FileExistsError:
-        log = carpeta / f'semantico-{usuario}-{ahora:%d-%m-%Y-%Hh%M%S%f}.txt'
-        salida = log.open('x', encoding='utf-8')
+    for intento in count():
+        hora = ahora.strftime('%d-%m-%Y-%Hh%M')
+        if intento:
+            hora = ahora.strftime('%d-%m-%Y-%Hh%M%S%f') + str(intento)
+        log = carpeta / f'semantico-{usuario}-{hora}.txt'
+        try:
+            salida = log.open('x', encoding='utf-8')
+            break
+        except FileExistsError:
+            continue
     with salida:
         salida.write('\n'.join(resultados) + '\n')
 
@@ -36,7 +41,7 @@ def ejecutar_analisis(archivo, usuario='antivsan796'):
 
 if __name__ == '__main__':
     argumentos = ArgumentParser(description='Pruebas del analizador semantico')
-    argumentos.add_argument('--archivo', default='prueba_anthony_semantico_for.lua')
+    argumentos.add_argument('--archivo', default='prueba_anthony_semantico_completo.lua')
     argumentos.add_argument('--usuario', default='antivsan796')
     opciones = argumentos.parse_args()
     ejecutar_analisis(opciones.archivo, opciones.usuario)

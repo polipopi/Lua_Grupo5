@@ -12,30 +12,40 @@ precedence = (
     ('left', 'OR'),
     ('left', 'AND'),
     ('left', 'EQ', 'NE', 'LT', 'LE', 'GT', 'GE'),
-    ('right', 'NOT'),
     ('right', 'CONCAT'),
     ('left', 'PLUS', 'MINUS'),
     ('left', 'TIMES', 'DIVIDE', 'FLOORDIV', 'MOD'),
-    ('right', 'UMINUS', 'HASH'),
+    # NOT tiene precedencia unaria al revisar concatenaciones (Anthony).
+    ('right', 'UMINUS', 'HASH', 'NOT'),
     ('right', 'POW'),
 )
 
 # FIN APORTE PAULA BASTIDAS
 
+
 errores = []
 pasos_for = []
 concatenaciones = []
+arbol = []
 
-# INICIO APORTE PAULA BASTIDAS: REGLAS SEMANTICAS
-errores_semanticos = []
-tabla_simbolos = {}
 
-funciones_predefinidas = {
-    'print', 'pairs', 'ipairs', 'type', 'tostring',
-    'tonumber', 'setmetatable', 'assert', 'error',
-    'pcall', 'xpcall', 'require'
-}
-# FIN APORTE PAULA BASTIDAS
+# APORTE SEMANTICO ANTHONY SANTANA
+# Las acciones p[0] guardan expresiones, asignaciones y bloques para revisar
+# mis reglas usando los valores disponibles en cada parte del programa.
+def nombre_variable(nombre, linea):
+    return ('variable', linea, nombre)
+
+
+def campo_variable(base, nombre, linea):
+    clave = ('literal', linea, 'STRING', repr(nombre), False)
+    return ('indice', linea, base, clave)
+
+
+def ruta_variable(nombres, linea):
+    variable = nombre_variable(nombres[0], linea)
+    for nombre in nombres[1:]:
+        variable = campo_variable(variable, nombre, linea)
+    return variable
 
 
 # =====================================================
@@ -44,11 +54,17 @@ funciones_predefinidas = {
 
 def p_programa(p):
     'programa : sentencias retorno_opcional'
+    p[0] = p[1]
+    if p[2] is not None:
+        p[0].append(p[2])
 
 
 def p_sentencias(p):
     '''sentencias : sentencias sentencia
                   | '''
+    p[0] = p[1] if len(p) == 3 else []
+    if len(p) == 3 and p[2] is not None:
+        p[0].append(p[2])
 
 
 # =====================================================
@@ -59,39 +75,22 @@ def p_sentencias(p):
 def p_sentencia(p):
     '''sentencia : lista_variables ASSIGN lista_expresiones
                  | SEMI'''
+    if len(p) == 4:
+        p[0] = ('asignacion', p.lineno(2), p[1], p[3], False)
 
 
 def p_sentencia_local(p):
     '''sentencia : LOCAL lista_variables
                  | LOCAL lista_variables ASSIGN lista_expresiones'''
+    p[0] = ('asignacion', p.lineno(1), p[2], p[4] if len(p) == 5 else [], True)
 
-    # INICIO APORTE PAULA BASTIDAS: REGISTRO DE IDENTIFICADORES
-    if len(p) == 3:
-        for nombre in p[2]:
-            tabla_simbolos[nombre] = 'variable'
-    else:
-        nombres = p[2]
-        valores = p[4]
-
-        for i, nombre in enumerate(nombres):
-            if i < len(valores):
-                tabla_simbolos[nombre] = valores[i]
-                
-            else:
-                tabla_simbolos[nombre] = 'variable'
-    # FIN APORTE PAULA BASTIDAS
 
 # Permite asignar varios valores a varias variables.
 def p_lista_variables(p):
     '''lista_variables : variable
                        | lista_variables COMMA variable'''
+    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
-    # INICIO APORTE PAULA BASTIDAS
-    if len(p) == 2:
-        p[0] = [p[1]]
-    else:
-        p[0] = p[1] + [p[3]]
-    # FIN APORTE PAULA BASTIDAS
 
 # FIN APORTE PAULA BASTIDAS
 
@@ -105,12 +104,13 @@ def p_sentencia_for(p):
     'sentencia : FOR ID ASSIGN expresion COMMA expresion paso DO programa END'
     # Inicio, limite y paso para la regla semantica de Anthony.
     pasos_for.append((p.lineno(1), p[4], p[6], p[7]))
+    p[0] = ('for', p.lineno(1), p[2], p[4], p[6], p[7], p[9])
 
 
 def p_paso(p):
     '''paso : COMMA expresion
             | '''
-    p[0] = p[2] if len(p) == 3 else 1
+    p[0] = p[2] if len(p) == 3 else ('literal', 0, 'INTEGER', 1, False)
 
 
 # =====================================================
@@ -120,6 +120,7 @@ def p_paso(p):
 
 def p_sentencia_while(p):
     'sentencia : WHILE expresion DO programa END'
+    p[0] = ('while', p.lineno(1), p[2], p[4])
 
 
 # FIN APORTE PAULA BASTIDAS
@@ -132,19 +133,19 @@ def p_sentencia_while(p):
 
 def p_sentencia_funcion(p):
     'sentencia : FUNCTION ID LPAREN parametros_variables RPAREN programa END'
+    p[0] = ('definir_funcion', p.lineno(1), nombre_variable(p[2], p.lineno(2)), p[4], p[6], False)
 
-    # INICIO APORTE PAULA BASTIDAS: REGISTRO DE FUNCIONES
-    tabla_simbolos[p[2]] = 'function'
-    # FIN APORTE PAULA BASTIDAS
 
 def p_parametros_variables(p):
     '''parametros_variables : ELLIPSIS
                             | nombres COMMA ELLIPSIS'''
+    p[0] = (p[1] if len(p) == 4 else [], True)
 
 
 def p_nombres(p):
     '''nombres : ID
                | nombres COMMA ID'''
+    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
 
 # =====================================================
@@ -158,13 +159,20 @@ def p_parametros(p):
                   | nombres COMMA ELLIPSIS
                   | ELLIPSIS
                   | '''
+    if len(p) == 1:
+        p[0] = ([], False)
+    elif len(p) == 4:
+        p[0] = (p[1], True)
+    elif p.slice[1].type == 'ELLIPSIS':
+        p[0] = ([], True)
+    else:
+        p[0] = (p[1], False)
 
 
 # Reconoce funciones sin nombre propio.
 def p_expresion_funcion_anonima(p):
     'expresion : FUNCTION LPAREN parametros RPAREN programa END'
-    # Tipo para revisar los controles del for (Anthony Santana).
-    p[0] = 'function'
+    p[0] = ('funcion', p.lineno(1), p[3], p[5])
 
 
 # FIN APORTE PAULA BASTIDAS
@@ -181,6 +189,9 @@ def p_retorno_opcional(p):
                         | RETURN SEMI
                         | RETURN lista_expresiones SEMI
                         | '''
+    if len(p) > 1:
+        valores = p[2] if len(p) > 2 and isinstance(p[2], list) else []
+        p[0] = ('retorno', p.lineno(1), valores)
 
 
 # =====================================================
@@ -190,22 +201,12 @@ def p_retorno_opcional(p):
 
 def p_sentencia_llamada(p):
     'sentencia : llamada'
+    p[0] = ('expresion', p[1][1], p[1])
 
 
 def p_llamada(p):
     'llamada : variable LPAREN argumentos RPAREN'
-
-    # INICIO APORTE PAULA BASTIDAS: REGLA SEMANTICA 2
-    nombre = p[1]
-
-    if nombre not in funciones_predefinidas and tabla_simbolos.get(nombre) != 'function':
-        errores_semanticos.append(
-            f"Error semántico [Identificadores] en la línea {p.lineno(2)}: "
-            f"'{nombre}' no es una función"
-        )
-
-    p[0] = 'unknown'
-    # FIN APORTE PAULA BASTIDAS
+    p[0] = ('llamada', p.lineno(2), p[1], p[3])
 
 def p_expresion_llamada(p):
     'expresion : llamada'
@@ -214,6 +215,7 @@ def p_expresion_llamada(p):
 def p_argumentos(p):
     '''argumentos : lista_expresiones
                   | '''
+    p[0] = p[1] if len(p) == 2 else []
 
 
 # =====================================================
@@ -223,13 +225,8 @@ def p_argumentos(p):
 def p_lista_expresiones(p):
     '''lista_expresiones : expresion
                          | lista_expresiones COMMA expresion'''
+    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
-    # INICIO APORTE PAULA BASTIDAS
-    if len(p) == 2:
-        p[0] = [p[1]]
-    else:
-        p[0] = p[1] + [p[3]]
-    # FIN APORTE PAULA BASTIDAS
 
 # =====================================================
 # EXPRESIONES ARITMETICAS, RELACIONALES Y LOGICAS
@@ -253,54 +250,15 @@ def p_expresion_binaria(p):
                  | expresion AND expresion
                  | expresion OR expresion
                  | expresion CONCAT expresion'''
-        # INICIO APORTE PAULA BASTIDAS: REGLA SEMANTICA 4
-    operadores_aritmeticos = ('+', '-', '*', '/', '//', '%', '^')
-
-    if p[2] in operadores_aritmeticos:
-        tipo1 = p[1]
-        tipo2 = p[3]
-
-        def obtener_tipo(valor):
-            if isinstance(valor, (int, float)):
-                return 'number'
-
-            if isinstance(valor, str):
-                return valor if valor in (
-                    'boolean', 'nil', 'table', 'function', 'string'
-                ) else 'unknown'
-
-            if isinstance(valor, tuple):
-                if len(valor) == 3 and valor[0] in operadores_aritmeticos:
-                    tipo1 = obtener_tipo(valor[1])
-                    tipo2 = obtener_tipo(valor[2])
-
-                    if tipo1 == 'number' and tipo2 == 'number':
-                        return 'number'
-
-            return 'unknown'
-
-        tipo_izquierdo = obtener_tipo(tipo1)
-        tipo_derecho = obtener_tipo(tipo2)
-
-        if tipo_izquierdo not in ('number', 'unknown') or tipo_derecho not in ('number', 'unknown'):
-            errores_semanticos.append(
-                f"Error semántico [Operaciones] en la línea {p.lineno(2)}: "
-                f"no se puede aplicar '{p[2]}' entre {tipo_izquierdo} y {tipo_derecho}"
-            )
-
-        p[0] = (p[2], p[1], p[3])
-
-    # FIN APORTE PAULA BASTIDAS
-
-    # Datos para la regla semantica de concatenacion de Anthony.
-    elif p[2] == '..':
+    p[0] = ('binaria', p.lineno(2), p[2], p[1], p[3])
+    if p[2] == '..':
         concatenaciones.append((p.lineno(2), p[1], p[3]))
-        p[0] = 'string'
 
 
 # Reconoce la negacion logica.
 def p_expresion_not(p):
     'expresion : NOT expresion %prec NOT'
+    p[0] = ('unaria', p.lineno(1), 'not', p[2])
 
 
 # FIN APORTE PAULA BASTIDAS
@@ -313,21 +271,23 @@ def p_expresion_not(p):
 
 def p_expresion_negativa(p):
     'expresion : MINUS expresion %prec UMINUS'
-    p[0] = ('negativo', p[2])
+    p[0] = ('unaria', p.lineno(1), '-', p[2])
 
 
 def p_expresion_longitud(p):
     'expresion : HASH expresion'
+    p[0] = ('unaria', p.lineno(1), '#', p[2])
 
 
 def p_expresion_parentesis(p):
     'expresion : LPAREN expresion RPAREN'
-    p[0] = p[2]
+    p[0] = ('grupo', p.lineno(1), p[2])
 
 
 # =====================================================
 # VALORES Y VARIABLES
 # =====================================================
+
 def p_expresion_valor(p):
     '''expresion : INTEGER
                  | FLOAT
@@ -337,43 +297,26 @@ def p_expresion_valor(p):
                  | NIL
                  | ELLIPSIS
                  | variable'''
-
-    # INICIO APORTE PAULA BASTIDAS: TIPOS DE IDENTIFICADORES
-    if p.slice[1].type in ('INTEGER', 'FLOAT'):
+    tipo = p.slice[1].type
+    if tipo == 'variable':
         p[0] = p[1]
+    elif tipo == 'ELLIPSIS':
+        p[0] = ('varargs', p.lineno(1))
+    else:
+        hexadecimal = tipo == 'INTEGER' and lexer.lexdata[p.lexpos(1):p.lexpos(1) + 2].lower() == '0x'
+        p[0] = ('literal', p.lineno(1), tipo, p[1], hexadecimal)
 
-    elif p.slice[1].type in ('TRUE', 'FALSE'):
-        p[0] = 'boolean'
-
-    elif p.slice[1].type == 'NIL':
-        p[0] = 'nil'
-
-    elif p.slice[1].type == 'STRING':
-        contenido = str(p[1]).strip('"\'')
-        try:
-            float(contenido)
-            p[0] = 'number'
-        except ValueError:
-            p[0] = 'string'
-
-    elif p.slice[1].type == 'variable':
-        p[0] = tabla_simbolos.get(p[1], 'unknown')
-    # FIN APORTE PAULA BASTIDAS
 
 # =====================================================
 # VARIABLES Y ACCESO A TABLAS
 # APORTE ANTHONY SANTANA
 # =====================================================
+
 def p_variable(p):
     '''variable : ID
                 | variable LBRACKET expresion RBRACKET'''
+    p[0] = nombre_variable(p[1], p.lineno(1)) if len(p) == 2 else ('indice', p.lineno(2), p[1], p[3])
 
-    # INICIO APORTE PAULA BASTIDAS: IDENTIFICADORES
-    if len(p) == 2:
-        p[0] = p[1]
-    else:
-        p[0] = p[1]
-    # FIN APORTE PAULA BASTIDAS
 
 # =====================================================
 # TABLAS Y DICCIONARIOS
@@ -385,14 +328,14 @@ def p_expresion_tabla(p):
     '''expresion : LBRACE RBRACE
                  | LBRACE elementos RBRACE
                  | LBRACE elementos separador RBRACE'''
-    # Tipo para revisar los controles del for (Anthony Santana).
-    p[0] = 'table'
+    p[0] = ('tabla', p.lineno(1), p[2] if len(p) > 3 else [])
 
 
 # Permite campos separados por coma o punto y coma.
 def p_elementos(p):
     '''elementos : campo
                  | elementos separador campo'''
+    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
 
 # Reconoce claves con nombre, claves entre corchetes
@@ -401,6 +344,13 @@ def p_campo(p):
     '''campo : ID ASSIGN expresion
              | LBRACKET expresion RBRACKET ASSIGN expresion
              | expresion'''
+    if len(p) == 2:
+        p[0] = (None, p[1])
+    elif len(p) == 4:
+        clave = ('literal', p.lineno(1), 'STRING', repr(p[1]), False)
+        p[0] = (clave, p[3])
+    else:
+        p[0] = (p[2], p[5])
 
 
 def p_separador(p):
@@ -416,17 +366,20 @@ def p_separador(p):
 
 def p_sentencia_if(p):
     'sentencia : IF expresion THEN programa lista_elseif parte_else END'
+    p[0] = ('if', p.lineno(1), [(p[2], p[4])] + p[5], p[6])
 
 
 # puede haber varios elseif seguidos o ninguno
 def p_lista_elseif(p):
     '''lista_elseif : lista_elseif ELSEIF expresion THEN programa
                     | '''
+    p[0] = p[1] + [(p[3], p[5])] if len(p) == 6 else []
 
 
 def p_parte_else(p):
     '''parte_else : ELSE programa
                   | '''
+    p[0] = p[2] if len(p) == 3 else []
 
 # FIN APORTE SHIRLEY ARAGON
 
@@ -440,10 +393,10 @@ def p_parte_else(p):
 def p_sentencia_funcion_retorno(p):
     '''sentencia : FUNCTION ID LPAREN nombres RPAREN programa END
                  | FUNCTION ID LPAREN RPAREN programa END'''
+    parametros = (p[4], False) if len(p) == 8 else ([], False)
+    cuerpo = p[6] if len(p) == 8 else p[5]
+    p[0] = ('definir_funcion', p.lineno(1), nombre_variable(p[2], p.lineno(2)), parametros, cuerpo, False)
 
-    # INICIO APORTE PAULA BASTIDAS: REGISTRO DE FUNCIONES
-    tabla_simbolos[p[2]] = 'function'
-    # FIN APORTE PAULA BASTIDAS
 # FIN APORTE SHIRLEY ARAGON
 
 
@@ -454,11 +407,8 @@ def p_sentencia_funcion_retorno(p):
 
 def p_variable_campo(p):
     'variable : variable DOT ID'
+    p[0] = campo_variable(p[1], p[3], p.lineno(2))
 
-    # INICIO APORTE PAULA BASTIDAS: IDENTIFICADORES
-    p[0] = str(p[1]) + '.' + str(p[3])
-    # FIN APORTE PAULA BASTIDAS
-    
 # FIN APORTE SHIRLEY ARAGON
 
 
@@ -473,6 +423,8 @@ def p_variable_campo(p):
 def p_sentencia_constante(p):
     '''sentencia : LOCAL ID atributo ASSIGN lista_expresiones
                  | LOCAL ID atributo'''
+    p[0] = ('asignacion', p.lineno(1), [nombre_variable(p[2], p.lineno(2))],
+            p[5] if len(p) == 6 else [], True)
 
 
 # Lua 5.4 solo acepta los atributos const y close.
@@ -497,6 +449,7 @@ def p_atributo(p):
 # repeat n = n + 1 until n >= 3
 def p_sentencia_repeat(p):
     'sentencia : REPEAT programa UNTIL expresion'
+    p[0] = ('repeat', p.lineno(1), p[2], p[4])
 
 # FIN APORTE MARLO VALLE
 
@@ -513,10 +466,8 @@ def p_sentencia_repeat(p):
 # y el valor por defecto se asigna con el operador or.
 def p_sentencia_funcion_local(p):
     'sentencia : LOCAL FUNCTION ID LPAREN parametros RPAREN programa END'
+    p[0] = ('definir_funcion', p.lineno(1), nombre_variable(p[3], p.lineno(3)), p[5], p[7], True)
 
-    # INICIO APORTE PAULA BASTIDAS: REGISTRO DE FUNCIONES LOCALES
-    tabla_simbolos[p[3]] = 'function'
-    # FIN APORTE PAULA BASTIDAS
 # FIN APORTE MARLO VALLE
 
 
@@ -536,6 +487,7 @@ def p_sentencia_funcion_local(p):
 #   for elemento in pairs(colores) do ... end
 def p_sentencia_for_generico(p):
     'sentencia : FOR nombres IN lista_expresiones DO programa END'
+    p[0] = ('for_generico', p.lineno(1), p[2], p[4], p[6])
 
 # FIN APORTE MARLO VALLE
 
@@ -553,6 +505,8 @@ def p_sentencia_for_generico(p):
 #   print "Hola Mundo"            local linea = io.read "l"
 def p_llamada_cadena(p):
     'llamada : variable STRING'
+    argumento = ('literal', p.lineno(2), 'STRING', p[2], False)
+    p[0] = ('llamada', p.lineno(2), p[1], [argumento])
 
 # FIN APORTE MARLO VALLE
 
@@ -580,18 +534,26 @@ def p_llamada_cadena(p):
 def p_sentencia_metodo(p):
     '''sentencia : FUNCTION ruta_funcion COLON ID LPAREN parametros RPAREN programa END
                  | FUNCTION ruta_funcion DOT ID LPAREN parametros RPAREN programa END'''
+    destino = campo_variable(ruta_variable(p[2], p.lineno(1)), p[4], p.lineno(3))
+    nombres, variable = p[6]
+    if p.slice[3].type == 'COLON':
+        nombres = ['self'] + nombres
+    p[0] = ('definir_funcion', p.lineno(1), destino, (nombres, variable), p[8], False)
 
 
 # Nombre de la tabla que contiene la funcion: Clase o modulo.Clase
 def p_ruta_funcion(p):
     '''ruta_funcion : ID
                     | ruta_funcion DOT ID'''
+    p[0] = p[1] + [p[3]] if len(p) == 4 else [p[1]]
 
 
 # Llamada a un metodo con dos puntos: objeto:metodo(argumentos)
 def p_llamada_metodo(p):
     '''llamada : variable COLON ID LPAREN argumentos RPAREN
                | variable COLON ID STRING'''
+    argumentos = p[5] if len(p) == 7 else [('literal', p.lineno(4), 'STRING', p[4], False)]
+    p[0] = ('metodo', p.lineno(2), p[1], p[3], argumentos)
 
 # FIN APORTE MARLO VALLE
 
@@ -625,16 +587,17 @@ parser = yacc.yacc(
 # =====================================================
 # FUNCION PARA ANALIZAR CODIGO
 # =====================================================
+
 def analizar(codigo):
+    global arbol
+    arbol = []
     errores.clear()
     pasos_for.clear()
     concatenaciones.clear()
-    errores_semanticos.clear()
-    tabla_simbolos.clear()
 
     lexer.lineno = 1
     lexer.errors = []
 
-    parser.parse(codigo, lexer=lexer)
+    arbol = parser.parse(codigo, lexer=lexer)
 
     return lexer.errors + errores

@@ -51,35 +51,39 @@ Las pruebas están en `src/pruebas/algoritmos/` y los logs quedan en
 
 ## Avance 3
 
-Empecé con mi regla del `for`: el paso no puede ser cero. Reviso cuando está
-escrito como un número, incluso `-0.0` o `(0)`. Si se omite, el paso es 1.
-El parser guarda ese dato y `src/semantico.py` lo revisa.
+Hice mis dos reglas semánticas. En el `for` numérico reviso que el inicio,
+límite y paso sean números y que el paso sea distinto de cero. En la
+concatenación reviso que `..` reciba cadenas o números.
 
-También reviso los tipos del inicio, límite y paso cuando aparecen como
-valores literales. Un booleano, `nil`, una tabla o una función producen un
-error con la línea del ciclo y el dato que tiene el tipo incorrecto.
+Ahora sigo los valores de las variables locales y globales, sus cambios,
+los campos de tablas y los parámetros y retornos de funciones. También
+calculo operaciones y convierto cadenas numéricas como `"1"`, `"0xFF"`
+y `"1e-3"` cuando se usan en los controles del ciclo. Los errores al calcular
+esos controles u operandos de concatenación se guardan con su línea.
 
-Ahora también calculo operaciones con números en los controles del ciclo.
-Por ejemplo, `2 - 2` y `4 * (3 - 3)` se detectan como pasos iguales a cero.
-Uso las operaciones `+`, `-`, `*`, `/`, `//`, `%` y `^`, con sus paréntesis.
+Para eso agregué al parser los datos del programa que usa mi análisis.
+Corregí la precedencia de `not`, porque es un operador unario y puede aparecer
+como operando de `..`.
 
-También agregué mi regla de concatenación. Reviso que `..` reciba cadenas
-o números. Si encuentro un booleano, `nil`, una tabla o una función, el error
-indica la línea y el operando incorrecto. Por ahora reviso valores literales
-y operaciones numéricas que puedo calcular.
+Al integrar los cambios de Paula, pasé sus comprobaciones de llamadas y
+operaciones a `src/reglas_paula.py`. Se usan con los valores que ya sigue
+el analizador y mantienen sus mensajes de error.
 
 ```sh
 python src/main_semantico.py
-python src/main_semantico.py --archivo prueba_anthony_semantico_operaciones_error.lua
-python src/main_semantico.py --archivo prueba_anthony_semantico_concatenacion.lua
-python src/main_semantico.py --archivo prueba_anthony_semantico_concatenacion_error.lua
+python src/main_semantico.py --archivo prueba_anthony_semantico_completo_error.lua
+python -m unittest discover -s tests
 ```
 
 Cada ejecución guarda un log `semantico-antivsan796-fecha-hora.txt` en la
-carpeta de resultados.
+carpeta de resultados. Mi prueba completa suma una matriz y describe el
+resultado con una función de n argumentos. La prueba con errores usa pasos
+iguales a cero, un límite que no es numérico y concatenaciones con tipos inválidos.
 
-Todavía me falta revisar los valores que vienen de variables, las conversiones
-de cadenas en los controles del `for` y los errores dentro de las operaciones.
+El análisis es estático. Las lecturas por teclado y las llamadas que no puedo
+resolver quedan como valores desconocidos. Para mantener acotada la revisión,
+calculo hasta 256 iteraciones conocidas y 12 niveles de llamadas; en los demás
+casos sigo los tipos y los valores que todavía se pueden determinar.
 
 ## Aporte de Marlo Valle (`marsalvatore28`)
 
