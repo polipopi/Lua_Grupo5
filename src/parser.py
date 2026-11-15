@@ -200,6 +200,9 @@ def p_expresion_binaria(p):
                  | expresion AND expresion
                  | expresion OR expresion
                  | expresion CONCAT expresion'''
+    # Guardo las operaciones para revisar los controles del for (Anthony).
+    if p[2] in ('+', '-', '*', '/', '//', '%', '^'):
+        p[0] = (p[2], p[1], p[3])
 
 
 # Reconoce la negacion logica.
@@ -217,8 +220,7 @@ def p_expresion_not(p):
 
 def p_expresion_negativa(p):
     'expresion : MINUS expresion %prec UMINUS'
-    if isinstance(p[2], (int, float)):
-        p[0] = -p[2]
+    p[0] = ('negativo', p[2])
 
 
 def p_expresion_longitud(p):
