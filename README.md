@@ -63,20 +63,23 @@ Ahora también calculo operaciones con números en los controles del ciclo.
 Por ejemplo, `2 - 2` y `4 * (3 - 3)` se detectan como pasos iguales a cero.
 Uso las operaciones `+`, `-`, `*`, `/`, `//`, `%` y `^`, con sus paréntesis.
 
+También agregué mi regla de concatenación. Reviso que `..` reciba cadenas
+o números. Si encuentro un booleano, `nil`, una tabla o una función, el error
+indica la línea y el operando incorrecto. Por ahora reviso valores literales
+y operaciones numéricas que puedo calcular.
+
 ```sh
 python src/main_semantico.py
-python src/main_semantico.py --archivo prueba_anthony_semantico_for_error.lua
-python src/main_semantico.py --archivo prueba_anthony_semantico_tipos.lua
-python src/main_semantico.py --archivo prueba_anthony_semantico_tipos_error.lua
-python src/main_semantico.py --archivo prueba_anthony_semantico_operaciones.lua
 python src/main_semantico.py --archivo prueba_anthony_semantico_operaciones_error.lua
+python src/main_semantico.py --archivo prueba_anthony_semantico_concatenacion.lua
+python src/main_semantico.py --archivo prueba_anthony_semantico_concatenacion_error.lua
 ```
 
 Cada ejecución guarda un log `semantico-antivsan796-fecha-hora.txt` en la
 carpeta de resultados.
 
-Todavía me falta revisar las conversiones de cadenas, los controles que
-usan variables, los errores dentro de las operaciones y mi regla de concatenación.
+Todavía me falta revisar los valores que vienen de variables, las conversiones
+de cadenas en los controles del `for` y los errores dentro de las operaciones.
 
 ## Aporte de Marlo Valle (`marsalvatore28`)
 

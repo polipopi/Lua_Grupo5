@@ -1,0 +1,6 @@
+Archivo: prueba_anthony_semantico_concatenacion_error.lua
+Reglas: controles del for y tipos de concatenacion.
+Error semantico [Operaciones] en la linea 2: no se puede concatenar un valor nil (operando derecho).
+Error semantico [Operaciones] en la linea 3: no se puede concatenar un valor boolean (operando izquierdo).
+Error semantico [Operaciones] en la linea 4: no se puede concatenar un valor table (operando derecho).
+Error semantico [Operaciones] en la linea 5: no se puede concatenar un valor function (operando derecho).

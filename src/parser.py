@@ -25,6 +25,7 @@ precedence = (
 
 errores = []
 pasos_for = []
+concatenaciones = []
 
 
 # =====================================================
@@ -203,6 +204,10 @@ def p_expresion_binaria(p):
     # Guardo las operaciones para revisar los controles del for (Anthony).
     if p[2] in ('+', '-', '*', '/', '//', '%', '^'):
         p[0] = (p[2], p[1], p[3])
+    # Datos para la regla semantica de concatenacion de Anthony.
+    elif p[2] == '..':
+        concatenaciones.append((p.lineno(2), p[1], p[3]))
+        p[0] = 'string'
 
 
 # Reconoce la negacion logica.
@@ -252,6 +257,8 @@ def p_expresion_valor(p):
         p[0] = 'boolean'
     elif p.slice[1].type == 'NIL':
         p[0] = 'nil'
+    elif p.slice[1].type == 'STRING':
+        p[0] = 'string'
 
 
 # =====================================================
@@ -508,6 +515,7 @@ parser = yacc.yacc(
 def analizar(codigo):
     errores.clear()
     pasos_for.clear()
+    concatenaciones.clear()
 
     lexer.lineno = 1
     lexer.errors = []

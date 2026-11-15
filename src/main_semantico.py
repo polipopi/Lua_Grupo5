@@ -12,7 +12,7 @@ def ejecutar_analisis(archivo, usuario='antivsan796'):
     ruta = BASE_DIR / 'pruebas' / 'algoritmos' / archivo
     errores = analizar(ruta.read_text(encoding='utf-8'))
 
-    resultados = [f'Archivo: {ruta.name}', 'Regla: controles numericos y paso cero del for.']
+    resultados = [f'Archivo: {ruta.name}', 'Reglas: controles del for y tipos de concatenacion.']
     if errores:
         resultados.extend(errores)
     else:

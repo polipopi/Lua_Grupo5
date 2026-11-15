@@ -1,11 +1,13 @@
 import math
 import operator
-from parser import analizar as analizar_sintaxis, pasos_for
+from parser import analizar as analizar_sintaxis, pasos_for, concatenaciones
 
 
 # INICIO APORTE ANTHONY SANTANA
-# Regla 8: controles numericos y paso distinto de cero en el for.
+# Reglas 5 y 8: concatenacion y controles del for numerico.
 # Calculo las operaciones que tienen solo numeros como operandos.
+TIPOS_INVALIDOS = ('boolean', 'nil', 'table', 'function')
+
 OPERACIONES = {
     '+': operator.add,
     '-': operator.sub,
@@ -58,7 +60,7 @@ def analizar(codigo):
         limite = calcular_constante(limite)
         paso = calcular_constante(paso)
         for nombre, valor in (('inicio', inicio), ('limite', limite), ('paso', paso)):
-            if isinstance(valor, str):
+            if valor in TIPOS_INVALIDOS:
                 errores.append(
                     f"Error semantico [Estructuras de Control] en la linea {linea}: "
                     f"el {nombre} del 'for' debe ser numerico, se recibio {valor}."
@@ -68,5 +70,15 @@ def analizar(codigo):
                 f"Error semantico [Estructuras de Control] en la linea {linea}: "
                 "el paso del 'for' no puede ser cero."
             )
+
+    # La concatenacion acepta cadenas y numeros.
+    for linea, izquierdo, derecho in sorted(concatenaciones, key=lambda expresion: expresion[0]):
+        for lado, expresion in (('izquierdo', izquierdo), ('derecho', derecho)):
+            tipo = calcular_constante(expresion)
+            if tipo in TIPOS_INVALIDOS:
+                errores.append(
+                    f"Error semantico [Operaciones] en la linea {linea}: "
+                    f"no se puede concatenar un valor {tipo} (operando {lado})."
+                )
     return errores
 # FIN APORTE ANTHONY SANTANA
