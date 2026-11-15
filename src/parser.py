@@ -71,7 +71,8 @@ def p_lista_variables(p):
 
 def p_sentencia_for(p):
     'sentencia : FOR ID ASSIGN expresion COMMA expresion paso DO programa END'
-    pasos_for.append((p.lineno(1), p[7]))
+    # Inicio, limite y paso para la regla semantica de Anthony.
+    pasos_for.append((p.lineno(1), p[4], p[6], p[7]))
 
 
 def p_paso(p):
@@ -127,6 +128,8 @@ def p_parametros(p):
 # Reconoce funciones sin nombre propio.
 def p_expresion_funcion_anonima(p):
     'expresion : FUNCTION LPAREN parametros RPAREN programa END'
+    # Tipo para revisar los controles del for (Anthony Santana).
+    p[0] = 'function'
 
 
 # FIN APORTE PAULA BASTIDAS
@@ -242,6 +245,11 @@ def p_expresion_valor(p):
                  | variable'''
     if p.slice[1].type in ('INTEGER', 'FLOAT'):
         p[0] = p[1]
+    # Tipos literales para la regla del for de Anthony Santana.
+    elif p.slice[1].type in ('TRUE', 'FALSE'):
+        p[0] = 'boolean'
+    elif p.slice[1].type == 'NIL':
+        p[0] = 'nil'
 
 
 # =====================================================
@@ -264,6 +272,8 @@ def p_expresion_tabla(p):
     '''expresion : LBRACE RBRACE
                  | LBRACE elementos RBRACE
                  | LBRACE elementos separador RBRACE'''
+    # Tipo para revisar los controles del for (Anthony Santana).
+    p[0] = 'table'
 
 
 # Permite campos separados por coma o punto y coma.

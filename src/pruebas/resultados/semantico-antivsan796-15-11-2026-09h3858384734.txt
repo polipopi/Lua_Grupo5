@@ -1,0 +1,6 @@
+Archivo: prueba_anthony_semantico_tipos_error.lua
+Regla: tipos literales y paso cero del for numerico.
+Error semantico [Estructuras de Control] en la linea 2: el inicio del 'for' debe ser numerico, se recibio boolean.
+Error semantico [Estructuras de Control] en la linea 3: el limite del 'for' debe ser numerico, se recibio nil.
+Error semantico [Estructuras de Control] en la linea 4: el paso del 'for' debe ser numerico, se recibio table.
+Error semantico [Estructuras de Control] en la linea 5: el inicio del 'for' debe ser numerico, se recibio function.

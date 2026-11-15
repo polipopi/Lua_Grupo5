@@ -55,15 +55,21 @@ Empecé con mi regla del `for`: el paso no puede ser cero. Por ahora reviso
 cuando está escrito como un número, incluso `-0.0` o `(0)`. Si se omite,
 el paso es 1. El parser guarda ese dato y `src/semantico.py` lo revisa.
 
+También reviso los tipos del inicio, límite y paso cuando aparecen como
+valores literales. Un booleano, `nil`, una tabla o una función producen un
+error con la línea del ciclo y el dato que tiene el tipo incorrecto.
+
 ```sh
 python src/main_semantico.py
 python src/main_semantico.py --archivo prueba_anthony_semantico_for_error.lua
+python src/main_semantico.py --archivo prueba_anthony_semantico_tipos.lua
+python src/main_semantico.py --archivo prueba_anthony_semantico_tipos_error.lua
 ```
 
 Cada ejecución guarda un log `semantico-antivsan796-fecha-hora.txt` en la
 carpeta de resultados. La prueba con error tiene dos ciclos con paso cero.
 
-Todavía me falta revisar los tipos del inicio, límite y paso, los pasos que
+Todavía me falta revisar las conversiones de cadenas, los controles que
 usan variables u operaciones y mi regla de concatenación.
 
 ## Aporte de Marlo Valle (`marsalvatore28`)
