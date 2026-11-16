@@ -1,0 +1,3 @@
+Archivo: prueba_marlo_semantico.lua
+Analisis semantico del programa.
+No se encontraron errores semanticos.
