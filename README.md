@@ -117,3 +117,25 @@ paréntesis sin cerrar.
 python src/main_sintactico.py --usuario marsalvatore28 --archivo prueba_marlo_sintactico.lua
 python src/main_sintactico.py --usuario marsalvatore28 --archivo prueba_marlo_sintactico_error.lua
 ```
+
+### Avance 3, semántico
+
+Mis reglas están en `src/reglas_marlo.py` y se llaman desde `src/semantico.py`.
+También agregué al parser la sentencia `break`, que no estaba en la gramática.
+
+- **Regla 6, conversión:** en una operación aritmética una cadena solo se
+  convierte a número si representa un numeral de Lua. `"10" + 5` es válido y
+  `"diez" + 5` muestra «la cadena "diez" no puede convertirse a número». Si la
+  cadena viene de `io.read` no se reporta, porque su valor no se conoce.
+- **Regla 7, break:** `break` solo puede ir dentro de `while`, `for` o `repeat`.
+  El cuerpo de una función empieza fuera de cualquier bucle, aunque la función
+  esté declarada dentro de uno.
+
+Las cadenas que no son número se reportan con la regla 6; la regla 4 de Paula
+se mantiene para `nil`, `boolean` y `table`.
+
+```sh
+python src/main_semantico.py --usuario marsalvatore28 --archivo prueba_marlo_semantico.lua
+python src/main_semantico.py --usuario marsalvatore28 --archivo prueba_marlo_semantico_error.lua
+python -m pytest tests
+```
