@@ -595,7 +595,7 @@ def analizar(codigo):
     for linea, mensaje in revisar_breaks(sintactico.arbol):
         analizador.error_marlo(linea, [mensaje])
     # FIN APORTE MARLO VALLE
-    return [mensaje for _, mensaje in sorted(analizador.errores.items())]
+    
     # INICIO APORTE SHIRLEY ARAGÓN: reglas 1 (identificadores) y 3 (constantes)
     for linea, mensaje in revisar_identificadores_y_constantes(sintactico.arbol, codigo):
         analizador.errores[(linea, 'Shirley', mensaje)] = mensaje
