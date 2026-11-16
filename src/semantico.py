@@ -4,6 +4,9 @@ import math
 import operator
 import parser as sintactico
 from reglas_paula import FUNCIONES_PREDEFINIDAS, revisar_llamada, revisar_operacion
+# INICIO APORTE MARLO VALLE: reglas semanticas 6 y 7
+from reglas_marlo import cadena_invalida, revisar_breaks, revisar_conversion
+# FIN APORTE MARLO VALLE
 from valores_semanticos import (
     Valor, convertir_base, convertir_numero, literal, operacion_numerica,
     texto_numero, unir_valores, verdad,
@@ -93,6 +96,12 @@ class Analizador:
     def error_paula(self, linea, mensaje):
         if mensaje is not None:
             self.errores[(linea, 'Paula', mensaje)] = mensaje
+
+    # INICIO APORTE MARLO VALLE
+    def error_marlo(self, linea, mensajes):
+        for mensaje in mensajes:
+            self.errores[(linea, 'Marlo', mensaje)] = mensaje
+    # FIN APORTE MARLO VALLE
 
     def nombre_llamada(self, nodo):
         if nodo[0] == 'variable':
@@ -226,6 +235,9 @@ class Analizador:
             if valor.tipo == 'error':
                 return valor
             if nodo[2] == '-':
+                # INICIO APORTE MARLO VALLE: regla 6 en el menos unario ("diez" negado)
+                self.error_marlo(nodo[1], revisar_conversion((valor,), nodo[1]))
+                # FIN APORTE MARLO VALLE
                 return operacion_numerica('-', valor)
             if nodo[2] == '#':
                 return self.longitud(valor)
@@ -250,7 +262,20 @@ class Analizador:
         if simbolo == '..':
             return self.concatenar(nodo, izquierdo, derecho)
         if simbolo in ('+', '-', '*', '/', '//', '%', '^'):
-            self.error_paula(nodo[1], revisar_operacion(simbolo, izquierdo, derecho, nodo[1]))
+            # INICIO APORTE MARLO VALLE: regla 6
+            # Las cadenas que no son numerales se reportan como error de
+            # conversion; la regla 4 queda para nil, boolean y table.
+            conversiones = revisar_conversion((izquierdo, derecho), nodo[1])
+            self.error_marlo(nodo[1], conversiones)
+            otro_invalido = any(
+                not cadena_invalida(valor)
+                and valor.tipo not in ('desconocido', 'error')
+                and convertir_numero(valor).tipo == 'error'
+                for valor in (izquierdo, derecho)
+            )
+            if not conversiones or otro_invalido:
+                self.error_paula(nodo[1], revisar_operacion(simbolo, izquierdo, derecho, nodo[1]))
+            # FIN APORTE MARLO VALLE
             return operacion_numerica(simbolo, izquierdo, derecho)
         if izquierdo.tipo == 'error':
             return izquierdo
@@ -560,6 +585,10 @@ def analizar(codigo):
         return errores
     analizador = Analizador()
     analizador.bloque(sintactico.arbol, analizador.entorno_inicial())
+    # INICIO APORTE MARLO VALLE: regla 7, se revisa la estructura del arbol
+    for linea, mensaje in revisar_breaks(sintactico.arbol):
+        analizador.error_marlo(linea, [mensaje])
+    # FIN APORTE MARLO VALLE
     return [mensaje for _, mensaje in sorted(analizador.errores.items())]
 
 

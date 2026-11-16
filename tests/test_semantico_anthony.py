@@ -149,7 +149,8 @@ class SemanticoAnthony(unittest.TestCase):
         self.assertIn("'total' no es una función", texto)
         self.assertIn("no se puede aplicar '+' entre number y boolean", texto)
         self.assertIn("no se puede aplicar '+' entre number y table", texto)
-        self.assertIn("no se puede aplicar '+' entre string y number", texto)
+        # Regla 6 (Marlo): una cadena que no es numeral se reporta como error de conversion.
+        self.assertIn('la cadena "hola" no puede convertirse a número', texto)
 
     def test_errores_previos_al_semantico(self):
         for codigo, categoria in [('x = "a" .. nil y = +', 'Error sintactico'),
