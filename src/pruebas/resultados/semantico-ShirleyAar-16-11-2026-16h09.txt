@@ -1,0 +1,8 @@
+Archivo: prueba_shirley_semantico_error.lua
+Analisis semantico del programa.
+Error semántico [Asignación] en la línea 8: no se puede modificar la constante 'PI'
+Error semántico [Asignación] en la línea 9: no se puede modificar la constante 'MAXIMO'
+Error semántico [Identificadores] en la línea 15: la variable 'interno' no está declarada en este ámbito
+Error semántico [Operaciones] en la línea 18: no se puede aplicar '+' entre number y nil
+Error semántico [Identificadores] en la línea 18: la variable 'desconocida' no está declarada en este ámbito
+Error semántico [Identificadores] en la línea 24: la variable 'i' no está declarada en este ámbito
