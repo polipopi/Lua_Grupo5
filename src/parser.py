@@ -455,6 +455,21 @@ def p_sentencia_repeat(p):
 
 
 # =====================================================
+# SENTENCIA BREAK
+# INICIO APORTE MARLO VALLE
+# =====================================================
+
+# break termina el bucle mas interno (while, for o repeat).
+# Sintacticamente puede ir en cualquier bloque; que este dentro
+# de un bucle lo revisa la regla semantica 7.
+def p_sentencia_break(p):
+    'sentencia : BREAK'
+    p[0] = ('break', p.lineno(1))
+
+# FIN APORTE MARLO VALLE
+
+
+# =====================================================
 # FUNCION LOCAL CON PARAMETRO OPCIONAL
 # INICIO APORTE MARLO VALLE
 # =====================================================
