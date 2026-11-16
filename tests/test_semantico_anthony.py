@@ -178,6 +178,74 @@ class SemanticoAnthony(unittest.TestCase):
         logs = list((runner.BASE_DIR / 'pruebas/resultados').glob('*.txt'))
         self.assertEqual(len(logs), 3)
 
+    def test_break_conserva_los_valores_al_salir(self):
+        cuerpos = (
+            'for i = 1, 3 do break paso = 0 texto = nil .. "x" end',
+            'for i = 1, 1000 do break paso = 0 end',
+            'for clave, valor in pairs({1, 2}) do break paso = 0 end',
+            'while true do break paso = 0 end',
+            'repeat break paso = 0 until true',
+            'for i = 1, 3 do if i == 1 then break end paso = 0 end',
+        )
+        for cuerpo in cuerpos:
+            with self.subTest(cuerpo=cuerpo):
+                texto = self.revisar(f'paso = 1 {cuerpo} for j = 1, 3, paso do end')
+                self.assertNotIn('Error', texto)
+        self.revisar('paso = 1 for i = 1, 3 do paso = 0 break end for j = 1, 3, paso do end', 1)
+
+    def test_break_condicional_con_valor_desconocido(self):
+        for cuerpo in (
+            'for i = 1, 3 do if io.read() then break end paso = 0 end',
+            'while true do if io.read() then break end paso = 0 break end',
+            'repeat if io.read() then break end paso = 0 until true',
+        ):
+            with self.subTest(cuerpo=cuerpo):
+                texto = self.revisar(f'paso = 1 {cuerpo} for j = 1, 3, paso do end')
+                self.assertNotIn('Error', texto)
+
+    def test_break_solo_sale_del_bucle_interno(self):
+        self.revisar('''
+            paso = 1
+            for i = 1, 3 do
+                for j = 1, 3 do break end
+                paso = 0
+            end
+            for numero = 1, 3, paso do end
+        ''', 1, 'no puede ser cero')
+        texto = self.revisar('''
+            paso = 1
+            while true do
+                for i = 1, 3 do break end
+                break
+                paso = 0
+            end
+            for numero = 1, 3, paso do end
+        ''')
+        self.assertNotIn('Error', texto)
+
+    def test_break_y_return_en_funciones(self):
+        definicion = '''
+            function elegir(condicion)
+                for i = 1, 3 do
+                    if condicion then return 0 else break end
+                end
+                return 1
+            end
+        '''
+        self.revisar(definicion + 'for i = 1, 3, elegir(false) do end')
+        self.revisar(definicion + 'for i = 1, 3, elegir(true) do end', 1)
+        texto = self.revisar('''
+            paso = 1
+            function interrumpir(...)
+                break
+                paso = 0
+            end
+            for i = 1, 1 do interrumpir() end
+            for j = 1, 3, paso do end
+        ''')
+        self.assertIn("'break' fuera de un bucle", texto)
+        self.assertNotIn("el paso del 'for' no puede ser cero", texto)
+
 
 if __name__ == '__main__':
     unittest.main()

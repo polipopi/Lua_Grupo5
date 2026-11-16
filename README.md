@@ -69,6 +69,10 @@ Al integrar los cambios de Paula, pasé sus comprobaciones de llamadas y
 operaciones a `src/reglas_paula.py`. Se usan con los valores que ya sigue
 el analizador y mantienen sus mensajes de error.
 
+Al integrar el `break` que agregó Marlo, ajusté el seguimiento de valores
+para que mis reglas no usen asignaciones que quedan después de salir del ciclo.
+Lo probé también con ciclos anidados y funciones.
+
 ```sh
 python src/main_semantico.py
 python src/main_semantico.py --archivo prueba_anthony_semantico_completo_error.lua

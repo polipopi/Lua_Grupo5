@@ -1,4 +1,5 @@
 from copy import deepcopy
+from contextlib import contextmanager
 from dataclasses import dataclass
 import math
 import operator
@@ -22,12 +23,16 @@ from valores_semanticos import (
 # INICIO APORTE ANTHONY SANTANA
 # Mis reglas son 5 (concatenacion) y 8 (for numerico).
 # Las comprobaciones 2 y 4 de Paula se mantienen en reglas_paula.py.
+SALIDA_BUCLE = object()
+
+
 class Entorno:
     def __init__(self, padre=None):
         self.padre = padre
         self.valores = {}
         self.varargs = None
         self.desconocidos = False
+        self.nivel = 0 if padre is None else padre.nivel + 1
 
     def propietario(self, nombre):
         entorno = self
@@ -89,6 +94,25 @@ class Analizador:
         self.retornos = [[]]
         self.secuencia = 0
         self.iteraciones = 256
+        self.bucles = []
+
+    @contextmanager
+    def contexto_bucle(self, entorno):
+        salidas = []
+        self.bucles.append((entorno.nivel, salidas))
+        try:
+            yield salidas
+        finally:
+            self.bucles.pop()
+
+    def interrumpir_bucle(self, entorno):
+        if not self.bucles:
+            return None
+        nivel, salidas = self.bucles[-1]
+        while entorno.nivel > nivel:
+            entorno = entorno.padre
+        salidas.append(deepcopy(entorno))
+        return SALIDA_BUCLE
 
     def objeto(self, tipo, dato):
         self.secuencia += 1
@@ -357,6 +381,7 @@ class Analizador:
         restantes = deepcopy(entorno)
         salidas = []
         retornos = []
+        interrumpido = False
         for condicion, cuerpo in nodo[2]:
             valor = verdad(self.expresion(condicion, restantes))
             if valor is not False:
@@ -364,6 +389,8 @@ class Analizador:
                 retorno = self.bloque(cuerpo, Entorno(rama))
                 if retorno is None:
                     salidas.append(rama)
+                elif retorno is SALIDA_BUCLE:
+                    interrumpido = True
                 else:
                     retornos.append(retorno)
             if valor is True:
@@ -372,29 +399,54 @@ class Analizador:
             retorno = self.bloque(nodo[3], Entorno(restantes))
             if retorno is None:
                 salidas.append(restantes)
+            elif retorno is SALIDA_BUCLE:
+                interrumpido = True
             else:
                 retornos.append(retorno)
         if salidas:
             self.unir_entornos(entorno, salidas)
             return None
-        return self.unir_retornos(retornos)
+        return SALIDA_BUCLE if interrumpido else self.unir_retornos(retornos)
 
     def bucle(self, cuerpo, entorno, variables, puede_omitirse):
-        antes = deepcopy(entorno)
-        primera = deepcopy(entorno)
-        ambito = Entorno(primera)
-        ambito.valores.update(variables)
-        retorno = self.bloque(cuerpo, ambito)
-        if retorno is not None and not puede_omitirse:
+        with self.contexto_bucle(entorno) as salidas:
+            antes = deepcopy(entorno)
+            primera = deepcopy(entorno)
+            ambito = Entorno(primera)
+            ambito.valores.update(variables)
+            retorno = self.bloque(cuerpo, ambito)
+            if retorno is not None:
+                if retorno is not SALIDA_BUCLE and not puede_omitirse and not salidas:
+                    return retorno
+                if puede_omitirse:
+                    salidas.append(antes)
+                self.unir_entornos(entorno, salidas)
+                return None
+            entrada = deepcopy(antes)
+            self.unir_entornos(entrada, [antes, primera])
+            repeticion = Entorno(entrada)
+            repeticion.valores.update(variables)
+            retorno = self.bloque(cuerpo, repeticion)
+            fuentes = salidas + [primera]
+            if retorno is None:
+                fuentes.append(entrada)
+            if puede_omitirse:
+                fuentes.append(antes)
+            self.unir_entornos(entorno, fuentes)
+            return None
+
+    def repetir(self, nodo, entorno):
+        with self.contexto_bucle(entorno) as salidas:
+            ambito = Entorno(entorno)
+            retorno = self.bloque(nodo[2], ambito)
+            if retorno is None:
+                if verdad(self.expresion(nodo[3], ambito)) is not True:
+                    self.bucle(nodo[2], entorno, {}, True)
+                salidas.append(deepcopy(entorno))
+            if salidas:
+                self.unir_entornos(entorno, salidas)
+                return None
             return retorno
-        entrada = deepcopy(antes)
-        self.unir_entornos(entrada, [antes, primera])
-        repeticion = Entorno(entrada)
-        repeticion.valores.update(variables)
-        self.bloque(cuerpo, repeticion)
-        fuentes = [antes, entrada] if puede_omitirse else [entrada]
-        self.unir_entornos(entorno, fuentes)
-        return None
 
     def for_numerico(self, nodo, entorno):
         controles = [self.expresion(expresion, entorno) for expresion in nodo[3:6]]
@@ -419,13 +471,20 @@ class Analizador:
             valores = self.valores_for(inicio.dato, limite.dato, paso.dato, enteros)
             if valores is not None:
                 self.iteraciones -= len(valores)
-                for valor in valores:
-                    ambito = Entorno(entorno)
-                    ambito.valores[nodo[2]] = Valor('number', valor)
-                    retorno = self.bloque(nodo[6], ambito)
-                    if retorno is not None:
-                        return retorno
-                return None
+                with self.contexto_bucle(entorno) as salidas:
+                    retorno = None
+                    for valor in valores:
+                        ambito = Entorno(entorno)
+                        ambito.valores[nodo[2]] = Valor('number', valor)
+                        retorno = self.bloque(nodo[6], ambito)
+                        if retorno is not None:
+                            break
+                    if retorno is None:
+                        salidas.append(deepcopy(entorno))
+                    if salidas:
+                        self.unir_entornos(entorno, salidas)
+                        return None
+                    return retorno
         return self.bucle(nodo[6], entorno, {nodo[2]: Valor('number')}, puede_omitirse)
 
     def valores_for(self, inicio, limite, paso, enteros):
@@ -464,11 +523,14 @@ class Analizador:
             entorno.valores[nombre] = argumentos[indice] if indice < len(argumentos) else Valor(faltante)
         entorno.varargs = argumentos[len(nombres):] if variable else []
         self.retornos.append([])
+        bucles_exteriores = self.bucles
+        self.bucles = []
         try:
             if self.bloque(funcion.cuerpo, entorno) is None:
                 self.retornos[-1].append([])
             return self.unir_retornos(self.retornos[-1])
         finally:
+            self.bucles = bucles_exteriores
             self.retornos.pop()
             self.profundidad -= 1
 
@@ -508,6 +570,8 @@ class Analizador:
             elif tipo == 'retorno':
                 retorno = self.lista(nodo[2], entorno)
                 self.retornos[-1].append(retorno)
+            elif tipo == 'break':
+                return self.interrumpir_bucle(entorno)
             elif tipo == 'definir_funcion':
                 funcion = Funcion(nodo[3], nodo[4], entorno, id(nodo))
                 valor = self.objeto('function', funcion)
@@ -526,13 +590,11 @@ class Analizador:
                 self.lista(nodo[3], entorno)
                 retorno = self.bucle(nodo[4], entorno, {nombre: Valor('desconocido') for nombre in nodo[2]}, True)
             elif tipo == 'while':
-                if verdad(self.expresion(nodo[2], entorno)) is not False:
-                    retorno = self.bucle(nodo[3], entorno, {}, True)
+                condicion = verdad(self.expresion(nodo[2], entorno))
+                if condicion is not False:
+                    retorno = self.bucle(nodo[3], entorno, {}, condicion is None)
             elif tipo == 'repeat':
-                ambito = Entorno(entorno)
-                retorno = self.bloque(nodo[2], ambito)
-                if retorno is None and verdad(self.expresion(nodo[3], ambito)) is not True:
-                    self.bucle(nodo[2], entorno, {}, True)
+                retorno = self.repetir(nodo, entorno)
             if retorno is not None:
                 return retorno
         return None
