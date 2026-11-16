@@ -7,6 +7,12 @@ from reglas_paula import FUNCIONES_PREDEFINIDAS, revisar_llamada, revisar_operac
 # INICIO APORTE MARLO VALLE: reglas semanticas 6 y 7
 from reglas_marlo import cadena_invalida, revisar_breaks, revisar_conversion
 # FIN APORTE MARLO VALLE
+
+# INICIO APORTE SHIRLEY ARAGÓN: reglas semanticas 1 y 3
+from reglas_shirley import revisar_identificadores_y_constantes
+# FIN APORTE SHIRLEY ARAGÓN
+
+
 from valores_semanticos import (
     Valor, convertir_base, convertir_numero, literal, operacion_numerica,
     texto_numero, unir_valores, verdad,
@@ -590,7 +596,11 @@ def analizar(codigo):
         analizador.error_marlo(linea, [mensaje])
     # FIN APORTE MARLO VALLE
     return [mensaje for _, mensaje in sorted(analizador.errores.items())]
-
+    # INICIO APORTE SHIRLEY ARAGÓN: reglas 1 (identificadores) y 3 (constantes)
+    for linea, mensaje in revisar_identificadores_y_constantes(sintactico.arbol, codigo):
+        analizador.errores[(linea, 'Shirley', mensaje)] = mensaje
+    # FIN APORTE SHIRLEY ARAGÓN
+    return [mensaje for _, mensaje in sorted(analizador.errores.items())]
 
 def calcular_constante(expresion):
     # Entrada usada por las pruebas de operaciones de los avances anteriores.
