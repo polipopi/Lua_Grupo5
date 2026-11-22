@@ -138,6 +138,11 @@ También agregué al parser la sentencia `break`, que no estaba en la gramática
 Las cadenas que no son número se reportan con la regla 6; la regla 4 de Paula
 se mantiene para `nil`, `boolean` y `table`.
 
+Como las clases fueron mi aporte del sintáctico, el semántico ahora busca los
+métodos en la clase cuando un objeto se crea con `setmetatable(obj, Clase)` y
+`Clase.__index = Clase`. Antes `objeto:metodo()` se reportaba como "no es una
+función" aunque el código fuera válido.
+
 ```sh
 python src/main_semantico.py --usuario marsalvatore28 --archivo prueba_marlo_semantico.lua
 python src/main_semantico.py --usuario marsalvatore28 --archivo prueba_marlo_semantico_error.lua
