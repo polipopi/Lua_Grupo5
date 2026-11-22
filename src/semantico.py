@@ -95,6 +95,9 @@ class Analizador:
         self.secuencia = 0
         self.iteraciones = 256
         self.bucles = []
+        # INICIO APORTE MARLO VALLE: metatablas de las clases
+        self.metatablas = {}
+        # FIN APORTE MARLO VALLE
 
     @contextmanager
     def contexto_bucle(self, entorno):
@@ -178,7 +181,30 @@ class Analizador:
         llave = clave(indice)
         if tabla.tipo != 'table' or tabla.dato is None or llave is None:
             return Valor('desconocido')
+        # INICIO APORTE MARLO VALLE: busqueda en la clase con __index
+        if llave not in tabla.dato and tabla.identidad in self.metatablas:
+            return self.heredado(tabla, llave, set())
+        # FIN APORTE MARLO VALLE
         return tabla.dato.get(llave, Valor('nil'))
+
+    # INICIO APORTE MARLO VALLE: CLASES CON METATABLAS
+    # obj = setmetatable({}, Clase) con Clase.__index = Clase hace que
+    # obj:metodo() busque el metodo en Clase. Si la busqueda no se puede
+    # completar se devuelve desconocido para no reportar errores falsos.
+    def heredado(self, tabla, llave, visitados):
+        meta = self.metatablas.get(tabla.identidad)
+        if meta is None or meta.tipo != 'table' or meta.dato is None:
+            return Valor('desconocido')
+        clase = meta.dato.get(('string', b'__index'))
+        if clase is None or clase.tipo != 'table' or clase.dato is None:
+            return Valor('desconocido')
+        if llave in clase.dato:
+            return clase.dato[llave]
+        if clase.identidad in visitados or clase.identidad not in self.metatablas:
+            return Valor('desconocido')
+        visitados.add(clase.identidad)
+        return self.heredado(clase, llave, visitados)
+    # FIN APORTE MARLO VALLE
 
     def tabla(self, campos, entorno):
         contenido = {}
@@ -620,6 +646,10 @@ class Analizador:
             dato = primero.tipo.encode('ascii') if primero.tipo != 'desconocido' else None
             return [Valor('string', dato)]
         if nombre == 'setmetatable':
+            # INICIO APORTE MARLO VALLE: se guarda la clase del objeto
+            if primero.tipo == 'table' and primero.identidad is not None and len(argumentos) > 1:
+                self.metatablas[primero.identidad] = argumentos[1]
+            # FIN APORTE MARLO VALLE
             return [primero]
         if nombre in ('print', 'io.write'):
             return []
