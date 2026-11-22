@@ -87,6 +87,37 @@ class Regla7Break(unittest.TestCase):
 
     def test_break_suelto(self):
         self.assertEqual(len(errores('break')), 1)
+
+
+class ClasesConMetatablas(unittest.TestCase):
+    def test_metodos_heredados_no_son_errores(self):
+        self.assertEqual(errores('''
+            local Animal = {}
+            Animal.__index = Animal
+            function Animal.nuevo(nombre)
+                local obj = setmetatable({}, Animal)
+                obj.nombre = nombre
+                return obj
+            end
+            function Animal:hablar() return self.nombre end
+            local Perro = setmetatable({}, Animal)
+            Perro.__index = Perro
+            function Perro.nuevo(nombre)
+                return setmetatable(Animal.nuevo(nombre), Perro)
+            end
+            function Perro:ladrar() return "guau" end
+            local p = Perro.nuevo("Toby")
+            print(p:ladrar(), p:hablar())
+        '''), [])
+
+    def test_campo_que_no_es_funcion_sigue_siendo_error(self):
+        resultado = errores('''
+            local t = {}
+            t.valor = 5
+            t.valor(3)
+        ''')
+        self.assertEqual(len(resultado), 1)
+        self.assertIn('no es una función', resultado[0])
 # FIN APORTE MARLO VALLE
 
 
