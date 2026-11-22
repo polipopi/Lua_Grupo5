@@ -1,0 +1,7 @@
+Archivo: prueba_marlo_semantico_error.lua
+Analisis semantico del programa.
+Error semántico [Conversión] en la línea 6: la cadena "diez" no puede convertirse a número
+Error semántico [Conversión] en la línea 8: la cadena "Ana" no puede convertirse a número
+Error semántico [Conversión] en la línea 9: la cadena "cinco" no puede convertirse a número
+Error semántico [Estructuras de Control] en la línea 14: 'break' fuera de un bucle
+Error semántico [Estructuras de Control] en la línea 20: 'break' fuera de un bucle
